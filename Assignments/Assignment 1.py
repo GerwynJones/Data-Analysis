@@ -7,6 +7,9 @@ Created on Wed Oct 04 10:57:34 2017
 
 from __future__ import division
 
+
+# Question 1
+
 """ 30% and 10% of Republican and Independent voters are, respectively,
 behind the change in the law, while 80% of the Democrat voters are in favour. You are visiting the
 state, and ask a Police Officer what she thinks of the idea. She says she’s against the change to
@@ -19,9 +22,9 @@ the law. What is the probability that she votes Democrat? """
 def P(A, B, C):
     """ Probability of disagreeing and voting democrat"""
 
-    sum = (A + B + C)
+    PB = (A + B + C)
 
-    Probability = A/sum
+    Probability = A/PB
 
     return Probability * 100
 
@@ -61,3 +64,13 @@ DA, DAc, IA, IAc, RA, RAc = Normalize(dema, demac, inda, indac, repa, repac)
 PovD = P(DAc, IAc, RAc)
 
 print(PovD)
+
+###############################################
+
+# Question 2
+
+
+
+
+
+
