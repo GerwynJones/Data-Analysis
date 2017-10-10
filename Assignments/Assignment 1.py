@@ -19,15 +19,28 @@ the law. What is the probability that she votes Democrat? """
 
 # Defining our functions
 
-def P(A, B, C):
+def P(X, Y, Z):
+
     """ Probability of disagreeing and voting democrat"""
 
-    PB = (A + B + C)
+    """ X is the probability of disagreeing with the change and also being a democrat 
+    Therefore X is PAnB """
 
-    Probability = A/PB
+    PAnB = X
+
+    """ PB is the probability of disagreeing with the change therefore is the sum of the disagreers """
+
+    PB = PU(X, Y, Z)
+
+    """ Probability of voting democrat given she disagrees is therefore PAnB/PB from our notes """
+
+    Probability = PAnB / PB
 
     return Probability * 100
 
+def PU(A, B, C):
+
+    return A + B + C
 
 def Normalize(A, B, C, D, E, F):
 
