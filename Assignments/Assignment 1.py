@@ -12,36 +12,52 @@ behind the change in the law, while 80% of the Democrat voters are in favour. Yo
 state, and ask a Police Officer what she thinks of the idea. She says she’s against the change to
 the law. What is the probability that she votes Democrat? """
 
+##########################################################
+
+# Defining our functions
 
 def P(A, B, C):
-    """ Probability of three union """
+    """ Probability of disagreeing and voting democrat"""
 
-    Probability = A * B * C
+    sum = (A + B + C)
+
+    Probability = A/sum
 
     return Probability * 100
 
 
-# Probability she agrees with the disagreeing democrats,
-# Disagrees with the disagreeing republicans and disagrees with the disagreeing independents
+def Normalize(A, B, C, D, E, F):
+
+    sum = (A + B + C + D + E + F)
+
+    return A/sum, B/sum, C/sum, D/sum, E/sum, F/sum
+
+########################################################
+
+# Probability she votes democrat given that she disagrees
 
 # Probability of agreeing democrats
-DA = 0.8
+dema = 0.8
 
 # Probability of disagreeing democrats
-DAc = 1 - DA
+demac = 1 - dema
 
 # Probability of agreeing independents
-IA = 0.1
+inda = 0.1
 
 # Probability of disagreeing independents
-IAc = 1 - IA
+indac = 1 - inda
 
 # Probability of agreeing republicans
-RA = 0.3
+repa = 0.3
 
 # Probability of disagreeing republicans
-RAc = 1 - RA
+repac = 1 - repa
 
-PovD = P(DAc, IA, RA)
+################################################
+
+DA, DAc, IA, IAc, RA, RAc = Normalize(dema, demac, inda, indac, repa, repac)
+
+PovD = P(DAc, IAc, RAc)
 
 print(PovD)
