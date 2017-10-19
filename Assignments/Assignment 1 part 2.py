@@ -8,6 +8,12 @@ Created on Wed Oct 04 10:57:34 2017
 from __future__ import division
 import numpy as np
 import scipy.stats as sc
+from scipy.stats.stats import pearsonr
+import matplotlib.pyplot as plt
+
+plt.close("all")
+
+#########################################################
 
 # Question 1
 
@@ -144,7 +150,7 @@ Probability = (PFcgD*PD)/PFc
 
 print Probability
 
-###############################################
+###################################################
 
 # Question 2
 
@@ -162,6 +168,91 @@ x1 = sc.binom.pmf(x, N, p)
 
 #b = np.min(x[x1 > a])/N
 
-print TF/ToV
-print TFc/ToV
 
+
+
+
+
+##################################################
+
+# Question 3
+
+""" A group researching cancer have previously found that the genetic marker D3 is a useful
+indication that a person will develop the more aggressive form of melanoma skin cancer, in that D3
+is present in 65% of the aggressive cases. However the test is expensive. A rival group claim that
+the marker M23 is more sensitive than D3, and works out considerably cheaper to test for. The
+rival research team manage to get DNA samples from 7 patients with the aggressive form of the
+disease, all of whom test positive for the genetic marker M23. Based on these results, is M23 a
+better marker for the disease than D3?  """
+
+
+
+
+
+
+###################################################
+
+# Question 4
+
+""" Eight new recruits for a rugby team are timed in both the 100 meters and 1,500 to assess
+their athletic abilities """
+
+# Source : https://stackoverflow.com/questions/3949226/calculating-pearson-correlation-and-significance-in-python
+
+# And : https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.corrcoef.html
+
+hm = np.array([12, 11, 13, 14, 12, 15, 12, 16])
+tm = np.array([280, 290, 220, 260, 270, 240, 250, 230])
+
+mhm = np.mean(hm)
+mtm = np.mean(tm)
+
+r = np.sum((hm - mhm)*(tm - mtm))/np.sqrt((np.sum((hm - mhm)**2))*(np.sum((tm - mtm)**2)))
+
+print "P8(|r| >",-r ,") = 5.3 %"
+
+# Or use an inbuilt function
+
+pr = pearsonr(hm, tm)
+
+print "P8(|r| >",-pr[0] ,") = ", pr[1]*100, "%"
+
+
+plt.plot(hm, tm, color='black', linestyle='None', marker='.')
+
+#####################################################
+
+# Question 5
+
+""" Using only a uniform random number generator, compute your own table of significance
+values for linear correlation coefficient r. Do not use the analytic expression for r """
+
+n = 20
+
+xTrial = np.random.uniform(0, 1, n)
+
+yTrial = np.random.uniform(0, 1, n)
+
+Prop = []
+
+tP = pearsonr(xTrial, yTrial)
+
+for i in xrange(len(xTrial)):
+
+    sumT = np.sum(xTrial)
+
+    if xTrial[i] > np.abs(tP[0]) and xTrial[i] < 1 - np.abs(tP[0]):
+
+        Prop.append(xTrial[i])
+
+    R = np.sum(Prop)/sumT
+
+print R
+print tP
+
+
+
+
+
+
+plt.show()
