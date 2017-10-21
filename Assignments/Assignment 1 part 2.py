@@ -8,10 +8,11 @@ Created on Wed Oct 04 10:57:34 2017
 from __future__ import division
 import numpy as np
 import scipy.stats as sc
+from scipy.special import factorial
 from scipy.stats.stats import pearsonr
 import matplotlib.pyplot as plt
 
-plt.close("all")
+plt.close('all')
 
 #########################################################
 
@@ -21,9 +22,6 @@ plt.close("all")
 behind the change in the law, while 80% of the Democrat voters are in favour. You are visiting the
 state, and ask a Police Officer what she thinks of the idea. She says she’s against the change to
 the law. What is the probability that she votes Democrat? """
-
-##########################################################
-
 
 # Finding the number of Democrat, Republican and Independent Voters from the State of Florida
 
@@ -129,7 +127,6 @@ def P(A, B):
 
     return A/B
 
-
 # Probability of voting Democrat
 
 PD = P(VoD, ToV)
@@ -160,16 +157,13 @@ they need to examine to know the probability that any given CPU is faulty to bet
 p = 1/2
 a = 0.05
 
-N = 100000
+N = 10000
 
 x = np.linspace(0, N, N + 1)
 
 x1 = sc.binom.pmf(x, N, p)
 
 #b = np.min(x[x1 > a])/N
-
-
-
 
 
 
@@ -186,9 +180,20 @@ disease, all of whom test positive for the genetic marker M23. Based on these re
 better marker for the disease than D3?  """
 
 
+def B(N, p, v):
+
+    T = np.linspace(0, N, N+1)
+
+    fact = factorial(N)/(factorial(T)*factorial(N-T))
+
+    B = fact*(p**T)*((1-p)**(N-T))
+
+    Bino = np.sum(B[T >= v])
+
+    return Bino
 
 
-
+print B(7, 0.65, 7)
 
 ###################################################
 
@@ -201,24 +206,43 @@ their athletic abilities """
 
 # And : https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.corrcoef.html
 
-hm = np.array([12, 11, 13, 14, 12, 15, 12, 16])
-tm = np.array([280, 290, 220, 260, 270, 240, 250, 230])
+# And : http://www.socscistatistics.com/pvalues/Default.aspx
 
-mhm = np.mean(hm)
-mtm = np.mean(tm)
+x_Data = np.array([12, 11, 13, 14, 12, 15, 12, 16])
+y_Data = np.array([280, 290, 220, 260, 270, 240, 250, 230])
 
-r = np.sum((hm - mhm)*(tm - mtm))/np.sqrt((np.sum((hm - mhm)**2))*(np.sum((tm - mtm)**2)))
 
-print "P8(|r| >",-r ,") = 5.3 %"
+def R(x_Data, y_Data):
+
+    Mean_x_Data = np.mean(x_Data)
+    Mean_y_Data = np.mean(y_Data)
+
+    r = np.sum((x_Data - Mean_x_Data)*(y_Data - Mean_y_Data))/np.sqrt((np.sum((x_Data - Mean_x_Data)**2))*(np.sum((y_Data - Mean_y_Data)**2)))
+
+    return r
+
+
+r = R(x_Data, y_Data)
+
+print "P8(|r| >", np.abs(r), ") = 5.706 %, using analytical function for r and a p-value calculator"
 
 # Or use an inbuilt function
 
-pr = pearsonr(hm, tm)
+pr = pearsonr(x_Data, y_Data)
 
-print "P8(|r| >",-pr[0] ,") = ", pr[1]*100, "%"
+print "P8(|r| >", np.abs(pr[0]), ") = ", pr[1]*100, "%, using an inbuilt function for both r and p-value"
 
+# Plotting data points
 
-plt.plot(hm, tm, color='black', linestyle='None', marker='.')
+p_coeff,residuals,_,_,_= np.polyfit(x_Data,y_Data, 1, full=True)
+
+p = np.poly1d(p_coeff)
+
+x_trial = np.linspace(np.min(x_Data), np.max(x_Data), 100)
+
+plt.plot(x_trial, p(x_trial), color='blue')
+
+plt.plot(x_Data, y_Data, color='black', linestyle='None', marker='.')
 
 #####################################################
 
@@ -227,32 +251,45 @@ plt.plot(hm, tm, color='black', linestyle='None', marker='.')
 """ Using only a uniform random number generator, compute your own table of significance
 values for linear correlation coefficient r. Do not use the analytic expression for r """
 
-n = 20
 
-xTrial = np.random.uniform(0, 1, n)
-
-yTrial = np.random.uniform(0, 1, n)
-
-Prop = []
-
-tP = pearsonr(xTrial, yTrial)
-
-for i in xrange(len(xTrial)):
-
-    sumT = np.sum(xTrial)
-
-    if xTrial[i] > np.abs(tP[0]) and xTrial[i] < 1 - np.abs(tP[0]):
-
-        Prop.append(xTrial[i])
-
-    R = np.sum(Prop)/sumT
-
-print R
-print tP
+N = 100
+centre = 0
+num = 500000
+distribution = np.zeros(num)
 
 
+for j in xrange(num):
+
+    X = np.random.uniform(-1, 1, N)
+
+    L = np.sum(X)
+
+    distribution[j] = centre + L
 
 
+Dist = distribution/np.max(np.abs(distribution))
 
+
+plt.figure()
+
+
+New_Prob,_ = np.histogram(Dist, bins=500)
+
+New_Prob = New_Prob/np.max(New_Prob)
+
+New_Dist = np.linspace(-1, 1, len(New_Prob))
+
+
+plt.plot(New_Dist, New_Prob)
+
+
+def P_r(N, r):
+
+    P = New_Prob[New_Dist >= r]
+
+    return np.max(P)
+
+
+print P_r(N, 0.05)
 
 plt.show()
