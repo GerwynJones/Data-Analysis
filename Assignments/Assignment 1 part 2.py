@@ -6,11 +6,12 @@ Created on Wed Oct 04 10:57:34 2017
 """
 
 from __future__ import division
+
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as sc
 from scipy.special import factorial
 from scipy.stats.stats import pearsonr
-import matplotlib.pyplot as plt
 
 plt.close('all')
 
@@ -145,7 +146,7 @@ PFcgD = DVFc
 
 Probability = (PFcgD*PD)/PFc
 
-print Probability
+print("P(D|Fc) = ", Probability)
 
 ###################################################
 
@@ -193,7 +194,7 @@ def B(N, p, v):
     return Bino
 
 
-print B(7, 0.65, 7)
+print("P(7, 0.65, 7) = ", B(7, 0.65, 7))
 
 ###################################################
 
@@ -224,17 +225,19 @@ def R(x_Data, y_Data):
 
 r = R(x_Data, y_Data)
 
-print "P8(|r| >", np.abs(r), ") = 5.706 %, using analytical function for r and a p-value calculator"
+print("r = ", r)
+
+print("P8(|r| >", np.abs(r), ") = 5.706 %, using analytical function for r and a p-value calculator")
 
 # Or use an inbuilt function
 
 pr = pearsonr(x_Data, y_Data)
 
-print "P8(|r| >", np.abs(pr[0]), ") = ", pr[1]*100, "%, using an inbuilt function for both r and p-value"
+print("P8(|r| >", np.abs(pr[0]), ") = ", pr[1]*100, "%, using an inbuilt function for both r and p-value")
 
 # Plotting data points
 
-p_coeff,residuals,_,_,_= np.polyfit(x_Data,y_Data, 1, full=True)
+p_coeff,residuals,_,_,_= np.polyfit(x_Data, y_Data, 1, full=True)
 
 p = np.poly1d(p_coeff)
 
@@ -251,45 +254,67 @@ plt.plot(x_Data, y_Data, color='black', linestyle='None', marker='.')
 """ Using only a uniform random number generator, compute your own table of significance
 values for linear correlation coefficient r. Do not use the analytic expression for r """
 
+plt.figure()
 
 N = 100
 centre = 0
-num = 500000
+num = 10000
 distribution = np.zeros(num)
 
 
-for j in xrange(num):
+for j in range(num):
 
     X = np.random.uniform(-1, 1, N)
 
-    L = np.sum(X)
+    L = np.sum(X)/N # normalise the distribution about -1 and 1
 
     distribution[j] = centre + L
 
 
-Dist = distribution/np.max(np.abs(distribution))
+Dist = distribution
 
+#plt.hist(Dist)
 
-plt.figure()
+bin = 200
 
-
-New_Prob,_ = np.histogram(Dist, bins=500)
-
-New_Prob = New_Prob/np.max(New_Prob)
+New_Prob,_ = np.histogram(Dist, bins=bin)
 
 New_Dist = np.linspace(-1, 1, len(New_Prob))
 
+P = New_Prob[New_Dist >= 0]
+
+D = New_Dist[New_Dist >= 0]
+
+P = P/np.sum(P)
 
 plt.plot(New_Dist, New_Prob)
 
 
 def P_r(N, r):
 
-    P = New_Prob[New_Dist >= r]
+    if type(r) == float:
 
-    return np.max(P)
+        Pr = P[D >= r]
+        Psum = np.sum(Pr)
+
+    else:
+
+        Psum = np.zeros(len(r))
+
+        for i in range(len(r)):
+
+            Pr = P[D >= r[i]]
+            Psum[i] = np.sum(Pr)
+
+    return Psum
 
 
-print P_r(N, 0.05)
+r = np.linspace(0, 1, 11)
+
+Pr = np.array(P_r(N, r)*100, dtype=int)
+
+
+print("For N =", N, ", ", Pr)
+
 
 plt.show()
