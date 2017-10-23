@@ -28,6 +28,7 @@ the law. What is the probability that she votes Democrat? """
 
 # Source : https://www.nytimes.com/elections/results/florida
 
+print("Question 1 :- ")
 
 # Democrat
 
@@ -146,7 +147,7 @@ PFcgD = DVFc
 
 Probability = (PFcgD*PD)/PFc
 
-print("P(D|Fc) = ", Probability)
+print('P(D|Fc) =', Probability)
 
 ###################################################
 
@@ -155,18 +156,41 @@ print("P(D|Fc) = ", Probability)
 """ Roughly half of its latest batch of CPUs contains a flaw. How many CPUs from the batch would
 they need to examine to know the probability that any given CPU is faulty to better than 5%?  """
 
+print("Question 2 :- ")
+
 p = 1/2
 a = 0.05
 
-N = 10000
+def B(a, p, v):
 
-x = np.linspace(0, N, N + 1)
+    N = 0
 
-x1 = sc.binom.pmf(x, N, p)
+    while True:
 
-#b = np.min(x[x1 > a])/N
+        T = np.linspace(0, N, N+1)
+
+        fact = factorial(N)/(factorial(T)*factorial(N-T))
+
+        B = fact*(p**T)*((1-p)**(N-T))
+
+        Bino = np.sum(B[T >= v])
+
+        if Bino > (1 - a):
+
+            print N
+
+            break
+
+        else:
+
+            N += 1
+
+    return Bino, N
 
 
+P, N = B(a, p, 1)
+
+print("Number of CPU for probability of at least one being faulty to better than 5% is", N)
 
 ##################################################
 
@@ -179,6 +203,8 @@ the marker M23 is more sensitive than D3, and works out considerably cheaper to 
 rival research team manage to get DNA samples from 7 patients with the aggressive form of the
 disease, all of whom test positive for the genetic marker M23. Based on these results, is M23 a
 better marker for the disease than D3?  """
+
+print("Question 3 :- ")
 
 
 def B(N, p, v):
@@ -194,7 +220,7 @@ def B(N, p, v):
     return Bino
 
 
-print("P(7, 0.65, 7) = ", B(7, 0.65, 7))
+print("P(7, 0.65, 7) =", B(7, 0.65, 7))
 
 ###################################################
 
@@ -208,6 +234,8 @@ their athletic abilities """
 # And : https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.corrcoef.html
 
 # And : http://www.socscistatistics.com/pvalues/Default.aspx
+
+print("Question 4 :- ")
 
 x_Data = np.array([12, 11, 13, 14, 12, 15, 12, 16])
 y_Data = np.array([280, 290, 220, 260, 270, 240, 250, 230])
@@ -246,6 +274,8 @@ x_trial = np.linspace(np.min(x_Data), np.max(x_Data), 100)
 plt.plot(x_trial, p(x_trial), color='blue')
 
 plt.plot(x_Data, y_Data, color='black', linestyle='None', marker='.')
+plt.xlabel("100m")
+plt.ylabel("1500m")
 
 #####################################################
 
@@ -256,9 +286,11 @@ values for linear correlation coefficient r. Do not use the analytic expression 
 
 plt.figure()
 
-N = 100
+print("Question 5 :- ")
+
+N = 3
 centre = 0
-num = 10000
+num = 100000
 distribution = np.zeros(num)
 
 
@@ -266,18 +298,15 @@ for j in range(num):
 
     X = np.random.uniform(-1, 1, N)
 
-    L = np.sum(X)/N # normalise the distribution about -1 and 1
+    L = np.sum(X)/N  # Normalise the distribution about -1 and 1
 
     distribution[j] = centre + L
 
 
-Dist = distribution
 
-#plt.hist(Dist)
+bin = 100
 
-bin = 200
-
-New_Prob,_ = np.histogram(Dist, bins=bin)
+New_Prob,_ = np.histogram(distribution, bins=bin)
 
 New_Dist = np.linspace(-1, 1, len(New_Prob))
 
@@ -285,9 +314,9 @@ P = New_Prob[New_Dist >= 0]
 
 D = New_Dist[New_Dist >= 0]
 
-P = P/np.sum(P)
+P = P/np.max(P)  # Normalized the probabilities so that the height of the probability at r = 0 is 1          # sum of the area is 1 for sum()
 
-plt.plot(New_Dist, New_Prob)
+plt.plot(D, P)
 
 
 def P_r(N, r):
@@ -295,7 +324,7 @@ def P_r(N, r):
     if type(r) == float:
 
         Pr = P[D >= r]
-        Psum = np.sum(Pr)
+        Psum = np.max(Pr)  # finds probability closest to r[i]                   # potential change to sum()
 
     else:
 
@@ -304,17 +333,18 @@ def P_r(N, r):
         for i in range(len(r)):
 
             Pr = P[D >= r[i]]
-            Psum[i] = np.sum(Pr)
+            Psum[i] = np.max(Pr)  # finds probability closest to r[i]
 
     return Psum
 
+r_max = 0.5
 
-r = np.linspace(0, 1, 11)
+r = np.linspace(0, r_max, (r_max*10) + 1)
 
 Pr = np.array(P_r(N, r)*100, dtype=int)
 
 
-print("For N =", N, ", ", Pr)
+print("For N =", N, Pr)
 
 
 plt.show()
