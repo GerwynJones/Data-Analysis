@@ -159,38 +159,12 @@ they need to examine to know the probability that any given CPU is faulty to bet
 print("Question 2 :- ")
 
 p = 1/2
-a = 0.05
+a = 0.05   # error in our accuracy
+t = 1.96   # t value (95% confidence)
 
-def B(a, p, v):
+n_cpu = (t/a)**2*(1-p)*(p)
 
-    N = 0
-
-    while True:
-
-        T = np.linspace(0, N, N+1)
-
-        fact = factorial(N)/(factorial(T)*factorial(N-T))
-
-        B = fact*(p**T)*((1-p)**(N-T))
-
-        Bino = np.sum(B[T >= v])
-
-        if Bino > (1 - a):
-
-            print N
-
-            break
-
-        else:
-
-            N += 1
-
-    return Bino, N
-
-
-P, N = B(a, p, 1)
-
-print("Number of CPU for probability of at least one being faulty to better than 5% is", N)
+print("Number of CPU for probability of at least one being faulty to better than 5% is", n_cpu)
 
 ##################################################
 
@@ -284,16 +258,14 @@ plt.ylabel("1500m")
 """ Using only a uniform random number generator, compute your own table of significance
 values for linear correlation coefficient r. Do not use the analytic expression for r """
 
-plt.figure()
-
 print("Question 5 :- ")
 
 N = np.linspace(3, 10, 8)
 
-num = 50000
+num = 10000
 
 
-def P_R(N, num):
+def P_r(N, num):
 
     r = np.zeros((len(N), num))
 
@@ -309,22 +281,30 @@ def P_R(N, num):
     return r
 
 
-r = P_R(N, num)
+r = P_r(N, num)
 
-print np.sum(r[0, :][r[0, :] > 0.1])/np.sum(r[0, :])
 
 def table(N, r):
+    print("Table of probability of correlation due to chance")
+
+    print("           r     =     0,    0.1,    0.2,   0.3,   0.4,   0.5,   0.6,   0.7,   0.8,   0.9,   1")
 
     r0 = np.linspace(0, 1, 11)
 
-    P = np.linspace((len(N), len(r)))
+    P = np.zeros((len(N), len(r0)))
 
     for i in range(len(N)):
 
-        for j in range(len(r)):
+        for j in range(len(r0)):
 
-            P[i, j] = np.sum(r[i, :][r[i, :] > r0[j]])/np.sum(r[i, :])
+            P[i, j] = np.int64((len(r[i, :][r[i, :] > r0[j]])/num)*100)
 
+        print("N = ", N[i], P[i, :])
+
+    return P
+
+
+P_Corr = table(N, r)
 
 
 
