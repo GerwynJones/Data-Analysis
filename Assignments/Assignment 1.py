@@ -288,20 +288,42 @@ plt.figure()
 
 print("Question 5 :- ")
 
-N = 3
-num = 100000
-r = np.zeros(num)
+N = np.linspace(3, 10, 8)
+
+num = 50000
 
 
-for j in range(num):
+def P_R(N, num):
 
-    X = np.random.uniform(0, 1, N)
-    Y = np.random.uniform(0, 1, N)
+    r = np.zeros((len(N), num))
 
-    r[i] = R(X, Y)
+    for i in range(len(N)):
+
+        for j in range(num):
+
+            X = np.random.uniform(0, 1, np.int(N[i]))
+            Y = np.random.uniform(0, 1, np.int(N[i]))
+
+            r[i, j] = np.abs(R(X, Y))
+
+    return r
 
 
+r = P_R(N, num)
 
+print np.sum(r[0, :][r[0, :] > 0.1])/np.sum(r[0, :])
+
+def table(N, r):
+
+    r0 = np.linspace(0, 1, 11)
+
+    P = np.linspace((len(N), len(r)))
+
+    for i in range(len(N)):
+
+        for j in range(len(r)):
+
+            P[i, j] = np.sum(r[i, :][r[i, :] > r0[j]])/np.sum(r[i, :])
 
 
 
