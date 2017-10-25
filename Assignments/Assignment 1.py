@@ -9,7 +9,7 @@ from __future__ import division
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.stats as sc
+import math
 from scipy.special import factorial
 from scipy.stats.stats import pearsonr
 
@@ -164,7 +164,40 @@ t = 1.96   # t value (95% confidence)
 
 n_cpu = (t/a)**2*(1-p)*(p)
 
-print("Number of CPU for probability of at least one being faulty to better than 5% is", n_cpu)
+print("Number of CPU for the probability that any given CPU is faulty to better than 5% is", n_cpu)
+
+
+# OR
+
+
+def B_trial(p, a):
+
+    N = 1
+
+    while True:
+
+        H = np.int(N/2)
+
+        fact = math.factorial(N)/(math.factorial(H)*math.factorial(N - H))
+
+        B = fact*(p**(N/2))*((1-p)**(N-(N/2)))
+
+        if B <= a:
+
+            print B
+
+            break
+
+        else :
+
+            N += 1
+
+    return N
+
+
+n_trial = B_trial(p, a)
+
+print("Number of CPU for the probability that any given CPU is faulty to better than 5% is", n_trial)
 
 ##################################################
 
@@ -305,7 +338,5 @@ def table(N, r):
 
 
 P_Corr = table(N, r)
-
-
 
 plt.show()
