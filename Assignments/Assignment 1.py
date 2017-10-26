@@ -160,7 +160,7 @@ print("Question 2 :- ")
 
 p = 1/2
 a = 0.05   # error in our accuracy
-t = 1.96   # t value (95% confidence)
+t = 0.98   # t value (95% confidence)
 
 n_cpu = (t/a)**2*(1-p)*(p)
 
@@ -169,6 +169,7 @@ print("Number of CPU for the probability that any given CPU is faulty to better 
 
 # OR
 
+""" IGNORE BELOW """
 
 def B_trial(p, a):
 
@@ -229,6 +230,11 @@ def B(N, p, v):
 
 print("P(7, 0.65, 7) =", B(7, 0.65, 7))
 
+# Plot of binomial
+
+
+
+
 ###################################################
 
 # Question 4
@@ -262,7 +268,7 @@ r = R(x_Data, y_Data)
 
 print("r = ", r)
 
-print("P8(|r| >", np.abs(r), ") = 5.706 %, using analytical function for r and a p-value calculator")
+print("P8(|r| >", np.abs(r), ") = 5.706 %, using analytical function for r and an online p-value calculator")
 
 # Or use an inbuilt function
 
@@ -295,10 +301,12 @@ print("Question 5 :- ")
 
 N = np.linspace(3, 10, 8)
 
-num = 10000
+num = 10000  # Number of trials used to increase the accuracy of our results
 
 
 def P_r(N, num):
+
+    # Creating our 2d array for r values
 
     r = np.zeros((len(N), num))
 
@@ -306,10 +314,14 @@ def P_r(N, num):
 
         for j in range(num):
 
+            # Creating random sets of numbers of length N
+
             X = np.random.uniform(0, 1, np.int(N[i]))
             Y = np.random.uniform(0, 1, np.int(N[i]))
 
-            r[i, j] = np.abs(R(X, Y))
+            # Using the function created in Question 4 to find our values of r
+
+            r[i, j] = np.abs(R(X, Y))  # Finding the positive values of r so the calculations later can be coded easier
 
     return r
 
@@ -322,13 +334,19 @@ def table(N, r):
 
     print("           r     =     0,    0.1,    0.2,   0.3,   0.4,   0.5,   0.6,   0.7,   0.8,   0.9,   1")
 
+    # Critical value r0
+
     r0 = np.linspace(0, 1, 11)
+
+    # Probability P
 
     P = np.zeros((len(N), len(r0)))
 
     for i in range(len(N)):
 
         for j in range(len(r0)):
+
+            # The probability of r being greater than a critical value r0
 
             P[i, j] = np.int64((len(r[i, :][r[i, :] > r0[j]])/num)*100)
 
