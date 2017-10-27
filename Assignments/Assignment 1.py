@@ -217,23 +217,49 @@ print("Question 3 :- ")
 
 def B(N, p, v):
 
-    T = np.linspace(0, N, N+1)
+    if type(v) == int:
 
-    fact = factorial(N)/(factorial(T)*factorial(N-T))
+        T = np.linspace(0, N, N+1)
 
-    B = fact*(p**T)*((1-p)**(N-T))
+        fact = factorial(N)/(factorial(T)*factorial(N-T))
 
-    Bino = np.sum(B[T >= v])
+        B = fact*(p**T)*((1-p)**(N-T))
+
+        Bino = np.sum(B[T >= v])
+
+    else:
+
+        Bino = np.zeros(len(v))
+
+        for i in range(len(v)):
+
+            fact = factorial(N)/(factorial(v[i])*factorial(N-v[i]))
+
+            Bino[i] = fact*(p**v[i])*((1-p)**(N-v[i]))
 
     return Bino
 
 
-print("P(7, 0.65, 7) =", B(7, 0.65, 7))
+NB = 7
+
+pb = 0.65
+
+s = 7
+
+print("P(7, 0.65, 7) =", B(NB, pb, s))
 
 # Plot of binomial
 
+plt.figure()
 
+v = np.linspace(0, NB, 100)
 
+p = B(NB, pb, v)
+
+plt.plot(v, p)
+
+plt.xlabel(r'$ \nu $')
+plt.ylabel(r'$ P_{7,0.65} (\nu) $')
 
 ###################################################
 
@@ -277,6 +303,8 @@ pr = pearsonr(x_Data, y_Data)
 print("P8(|r| >", np.abs(pr[0]), ") = ", pr[1]*100, "%, using an inbuilt function for both r and p-value")
 
 # Plotting data points
+
+plt.figure()
 
 p_coeff,residuals,_,_,_= np.polyfit(x_Data, y_Data, 1, full=True)
 
