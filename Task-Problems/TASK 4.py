@@ -39,3 +39,5 @@ def B(N, p, v):
     return Bino
 
 print B(N, P, 12)*100
+
+
