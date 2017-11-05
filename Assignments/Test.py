@@ -16,3 +16,6 @@ q = sc.binom.pmf(x, 10, .5)
 p = 1 - q[0] - q[1] - q[2] - q[3] - q[4] - q[5]
 
 print p
+
+
+print np.min([101, 2])
