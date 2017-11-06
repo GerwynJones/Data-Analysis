@@ -47,7 +47,7 @@ def pposterior(v, N, a, b):
     return norm_post
 
 
-v=0; N=3; a=2; b=2
+v = 0; N = 3; a = 5; b = 7
 
 theta = np.linspace(0, 1, 100)
 likelihood = plikelihood(v, N)
@@ -57,7 +57,7 @@ posterior = pposterior(v, N, a, b)
 mean = (v+a)/(N+b+a)
 std = np.sqrt((mean*(1-mean))/(N+a+b))
 
-print theta[posterior == np.max(posterior)]
+print (1/len(posterior))*np.sum(posterior)
 
 print "Mean =", mean
 print "Standard dev =", std
@@ -216,84 +216,23 @@ def MCMC(time, step_size, data, prior, distribution):
 
         count += 1
 
-    return Walk, i
+    return Walk
 
 
-def MCMC_h(time, step_size, data, h, distribution, i):
+def MCMC_int(X, data, prior, h, distribution1, distribution2):
 
-    count = 1
+    mean_data = np.mean(data)
+    std_data = np.std(data)
 
-    Sum = np.zeros(time)
+    mean_prior = prior[0]
+    std_prior = prior[1]
 
-    while count < time:
+    mean_h = h[0]
+    std_h = h[1]
 
-        Sum[0]  = i
+    P = ((distribution1(X, mean_h, std_h))/(distribution2(X, mean_data, std_data, mean_prior, std_prior)))
 
-        urand = np.random.uniform(0, 1, 1)
-
-        sign = np.random.random_integers(0, 1)
-
-        WO = Sum[count - 1]  # Original theta
-
-        PO = distribution(WO, h[0], h[1])  #  Original P(theta)
-
-        if sign == 0:
-
-            """ Move - step_size """
-
-            WN = WO - step_size  # Proposed theta
-
-            PN = distribution(WN, h[0], h[1])  #  Proposed P(theta)
-
-            Pmove = np.min([PN / PO, 1])
-
-            if WO <= np.min(data) :
-
-                Sum[count] = WO
-
-            elif Pmove < 1:
-
-                if urand <= Pmove:
-
-                    Sum[count] = WN
-
-                elif urand > Pmove:
-
-                    Sum[count] = WO
-
-            elif Pmove >= 1:
-
-                Sum[count] = WN
-
-        elif sign == 1:
-
-            """ Move + step_size """
-
-            WN = WO + step_size  # Proposed theta
-
-            PN = distribution(WN,  h[0], h[1])  #  Proposed P(theta)
-
-            Pmove = np.min([PN / PO, 1])
-
-            if WO >= np.max(data) :
-
-                Sum[count] = WO
-
-            elif Pmove < 1:
-
-                if urand <= Pmove:
-
-                    Sum[count] = WN
-
-                elif urand > Pmove:
-
-                    Sum[count] = WO
-
-            elif Pmove >= 1:
-
-                Sum[count] = WN
-
-        count += 1
+    Sum = ((1/len(P))*(np.sum(P)))**-1.
 
     return Sum
 
@@ -304,9 +243,8 @@ plt.figure()
 
 plt.plot(X, N_post)
 
+
 print X[N_post == np.max(N_post)]
-print mean_age
-print std_age
 
 
 time = 200000
@@ -314,22 +252,63 @@ step_size = 10
 
 prior = np.array([mean_prior, std_prior])
 
-h = np.array([1330, 300])
+h = np.array([1345, 235])
 
-Walk, i = MCMC(time, step_size, age_data, prior, norm2)
+Walk = MCMC(time, step_size, age_data, prior, norm2)
 
-Sum = MCMC_h(time, step_size, age_data, h, norm, i)
-
-P_D = ((1/len(Walk))*np.sum((Sum/Walk)))**-1
+Sum = MCMC_int(Walk, age_data, prior, h, norm, norm2)
 
 plt.figure()
 
-plt.hist(Walk, bins = 30, normed=True)
+plt.hist(Walk, bins=30, normed=True)
 
 MCMC_mean = np.mean(Walk)
+MCMC_std = np.std(Walk)
 
 print MCMC_mean
-print P_D
+print MCMC_std
+print Sum
+
+
+#########################################################
+
+
+# Question 3
+
+
+X1 = 1.2
+
+GM1 = np.array([3, 0.2])
+GM2 = np.array([1, 0.2])
+O = np.array([2.2, 0.75])
+
+
+def likelihood_GM(X1, GM1, GM2):
+
+    P_GM1 = norm(X1, GM1[0], GM1[1])
+    P_GM2 = norm(X1, GM2[0], GM2[1])
+
+    Tot = 0.5*P_GM1 + 0.5*P_GM2
+
+    return Tot
+
+def likelihood_O(X1, O):
+
+    P_O = norm(X1, O[0], O[1])
+
+    return P_O
+
+prior_GM = 0.7
+
+prior_O = 0.3
+
+P_GM = likelihood_GM(X1, GM1, GM2)*prior_GM
+
+P_O = likelihood_O(X1, O)*prior_O
+
+P_OX = P_O/P_GM
+
+print P_OX
 
 
 plt.show()
