@@ -130,15 +130,6 @@ def post_dist(age_data, mean_prior, std_prior):
     return X, N_age, N_prior, N_post
 
 
-X, N_age, N_prior, N_post = post_dist(age_data, mean_prior, std_prior)
-
-plt.figure()
-
-plt.plot(X, N_post)
-
-print X[N_post == np.max(N_post)]
-
-
 def MCMC(time, step_size, data, prior, distribution):
 
     count = 1
@@ -307,6 +298,17 @@ def MCMC_h(time, step_size, data, h, distribution, i):
     return Sum
 
 
+X, N_age, N_prior, N_post = post_dist(age_data, mean_prior, std_prior)
+
+plt.figure()
+
+plt.plot(X, N_post)
+
+print X[N_post == np.max(N_post)]
+print mean_age
+print std_age
+
+
 time = 200000
 step_size = 10
 
@@ -328,6 +330,6 @@ MCMC_mean = np.mean(Walk)
 
 print MCMC_mean
 print P_D
-print (1/len(Walk))*np.sum(Walk)
+
 
 plt.show()
