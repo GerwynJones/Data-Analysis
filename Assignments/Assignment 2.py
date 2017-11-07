@@ -18,49 +18,58 @@ np.random.seed(50)
 # Question 1
 
 
-def plikelihood(v, N):
-
-    theta = np.linspace(0, 1, 100)
+def p_binom(v, N, theta):
 
     p = (theta**v)*((1-theta)**(N-v))
 
-    return p/np.sum(p)
+    return p
 
 
-def pprior(a, b):
-
-    theta = np.linspace(0, 1, 100)
+def p_beta(a, b, theta):
 
     p = (theta**(a-1))*((1-theta)**(b-1))
 
     return p
 
 
-def pposterior(v, N, a, b):
-
-    theta = np.linspace(0, 1, 100)
+def pposterior(v, N, a, b, theta):
 
     post = (theta**((v + a)-1))*((1-theta)**((N - v + b)-1))
 
-    norm_post = post/np.sum(post)
+    norm_post = post
 
     return norm_post
 
 
-v = 0; N = 3; a = 5; b = 7
+v = 0; N = 3; a = 15; b = 15
 
 theta = np.linspace(0, 1, 100)
-likelihood = plikelihood(v, N)
-prior = pprior(a, b)
-posterior = pposterior(v, N, a, b)
+
+likelihood = p_binom(v, N, theta)
+
+mean_likelihood = (v+1)/(N+2)
+std_likelihood = np.sqrt((mean_likelihood*(1-mean_likelihood))/(N + 3))
+
+print "Mean of likelihood =", mean_likelihood
+print "Standard dev of likelihood =", std_likelihood
+
+prior = p_beta(a, b, theta)
+
+mean_prior = a/(a+b)
+std_prior = np.sqrt((mean_prior*(1-mean_prior))/(a + b + 1))
+
+print "Mean of prior =", mean_prior
+print "Standard dev of prior =", std_prior
+
+posterior = pposterior(v, N, a, b, theta)
+
+Posterior_Beta = p_beta(a+v, N-v+b, theta)
 
 mean = (v+a)/(N+b+a)
 std = np.sqrt((mean*(1-mean))/(N+a+b))
 
-print (1/len(posterior))*np.sum(posterior)
-
-print "Mean =", mean
-print "Standard dev =", std
+print "Mean of posterior =", mean
+print "Standard dev of posterior =", std
 
 #############################
 
@@ -69,17 +78,34 @@ print "Standard dev =", std
 plt.figure()
 
 plt.plot(theta, likelihood)
+plt.xlabel(r'$ \theta $')
+plt.ylabel(r'$ P(v|N,\theta) $')
+plt.title("Likelihood")
 
 plt.figure()
 
 plt.plot(theta, prior)
+plt.xlabel(r'$ \theta $')
+plt.ylabel(r'$ P(\theta|a,b) $')
+plt.title("Prior")
 
 plt.figure()
 
 plt.plot(theta, posterior)
+plt.xlabel(r'$ \theta $')
+plt.ylabel(r'$ P(\theta|v,N) $')
+plt.title("Posterior")
 
+plt.figure()
+
+plt.plot(theta, Posterior_Beta, label='Beta')
+plt.legend(loc='best')
+plt.xlabel(r'$ \theta $')
+plt.ylabel(r'$ P(\theta|v,N) $')
+plt.title("Posterior")
 
 #########################################################
+
 
 
 # Question 2
@@ -121,7 +147,6 @@ def post_dist(age_data, mean_prior, std_prior):
 
     X = np.linspace(min_age, max_age, 5000)
 
-
     N_age = norm(X, mean_age, std_age)
     N_prior = norm(X, mean_prior, std_prior)
 
@@ -139,6 +164,7 @@ def MCMC(time, step_size, data, prior, distribution):
     i = np.int(decision)
 
     Walk = np.zeros(time)
+    Prob = np.zeros(time)
 
     mean_data = np.mean(data)
     std_data = np.std(data)
@@ -157,6 +183,8 @@ def MCMC(time, step_size, data, prior, distribution):
         WO = Walk[count - 1]  # Original theta
 
         PO = distribution(WO, mean_data, std_data, mean_prior, std_prior)  #  Original P(theta)
+
+        Prob[count - 1] = PO
 
         if sign == 0:
 
@@ -216,7 +244,7 @@ def MCMC(time, step_size, data, prior, distribution):
 
         count += 1
 
-    return Walk
+    return Walk, Prob
 
 
 def MCMC_int(X, data, prior, h, distribution1, distribution2):
@@ -232,16 +260,16 @@ def MCMC_int(X, data, prior, h, distribution1, distribution2):
 
     P = ((distribution1(X, mean_h, std_h))/(distribution2(X, mean_data, std_data, mean_prior, std_prior)))
 
-    Sum = ((1/len(P))*(np.sum(P)))**-1.
-
-    return Sum
+    return P
 
 
 X, N_age, N_prior, N_post = post_dist(age_data, mean_prior, std_prior)
 
-plt.figure()
+fig, ax = plt.subplots(1, 1)
 
-plt.plot(X, N_post)
+ax.plot(X, N_age)
+
+ax.vlines(age_data, 0, norm(age_data, mean_age, std_age), colors='k', linestyles='-', lw=1)
 
 
 print X[N_post == np.max(N_post)]
@@ -254,9 +282,9 @@ prior = np.array([mean_prior, std_prior])
 
 h = np.array([1345, 235])
 
-Walk = MCMC(time, step_size, age_data, prior, norm2)
+Walk, Prob_post = MCMC(time, step_size, age_data, prior, norm2)
 
-Sum = MCMC_int(Walk, age_data, prior, h, norm, norm2)
+P_D = MCMC_int(Walk, age_data, prior, h, norm, norm2)
 
 plt.figure()
 
@@ -267,7 +295,9 @@ MCMC_std = np.std(Walk)
 
 print MCMC_mean
 print MCMC_std
-print Sum
+print P_D
+print np.sum(P_D)
+print len(P_D)
 
 
 #########################################################
@@ -309,6 +339,7 @@ P_O = likelihood_O(X1, O)*prior_O
 P_OX = P_O/P_GM
 
 print P_OX
+
 
 
 plt.show()
