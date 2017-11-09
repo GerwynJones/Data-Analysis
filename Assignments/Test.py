@@ -19,3 +19,5 @@ print p
 
 
 print np.min([101, 2])
+
+print x[9:]
