@@ -116,8 +116,8 @@ plt.ylabel(r'$ P(m|v,N) $')
 age_data = np.array([2141.22, 1781.15, 1523.37, 1816.90, 1932.29, 1541.21, 720.782, 1026.22, 1687.55, 2460.59])
 
 n = len(age_data)
-mean_age = np.sum(age_data)/n
-std_age = (np.sqrt((1/(n-1))*np.sum((age_data - mean_age)**2)))/np.sqrt(n)
+mean_age = np.mean(age_data)
+std_age = np.std(age_data)/np.sqrt(n)
 
 mean_prior = 1200
 std_prior = 300
@@ -172,9 +172,11 @@ def MCMC(time, step_size, data, mean_data, std_data, prior, distribution):
     mean_prior = prior[0]
     std_prior = prior[1]
 
-    while count < time:
+    Walk[0] = i
 
-        Walk[0] = i
+    Prob[0] = distribution(Walk[0], mean_data, std_data, mean_prior, std_prior)
+
+    while count < time:
 
         urand = np.random.uniform(0, 1, 1)
 
@@ -183,8 +185,6 @@ def MCMC(time, step_size, data, mean_data, std_data, prior, distribution):
         WO = Walk[count - 1]  #  Original theta
 
         PO = distribution(WO, mean_data, std_data, mean_prior, std_prior)  #  Original P(theta)
-
-        Prob[count - 1] = PO
 
         if sign == 0:
 
@@ -196,11 +196,7 @@ def MCMC(time, step_size, data, mean_data, std_data, prior, distribution):
 
             Pmove = np.min([PN / PO, 1])
 
-            if WO <= np.min(data):
-
-                Walk[count] = WO
-
-            elif Pmove < 1:
+            if Pmove < 1:
 
                 if urand <= Pmove:
 
@@ -224,11 +220,7 @@ def MCMC(time, step_size, data, mean_data, std_data, prior, distribution):
 
             Pmove = np.min([PN / PO, 1])
 
-            if WO >= np.max(data):
-
-                Walk[count] = WO
-
-            elif Pmove < 1:
+            if Pmove < 1:
 
                 if urand <= Pmove:
 
@@ -242,12 +234,14 @@ def MCMC(time, step_size, data, mean_data, std_data, prior, distribution):
 
                 Walk[count] = WN
 
+        Prob[count] = distribution(Walk[count], mean_data, std_data, mean_prior, std_prior)
+
         count += 1
 
     return Walk, Prob
 
 
-def MCMC_int(X, data, mean_data, std_data, prior, h, distribution1, distribution2):
+def MCMC_int(X, mean_data, std_data, prior, h, distribution1, distribution2):
 
     mean_prior = prior[0]
     std_prior = prior[1]
@@ -273,9 +267,15 @@ plt.plot(X, N_post)
 plt.xlabel('theta')
 plt.ylabel(r'$P(\theta|\hat X)$')
 
+
+sigma_hat = np.sqrt(((std_age**2)*(std_prior**2))/((std_prior**2)+(std_age**2)))
+mean_hat = ((std_prior**2)/(std_prior**2 + std_age**2))*mean_age + ((std_age**2)/(std_prior**2 + std_age**2))*mean_prior
+
+print "Standard deviation of posterior = ", sigma_hat
+print "Mean of posterior = ", mean_hat
+
 prior = np.array([mean_prior, std_prior])
 
-h = np.array([1544, 150])
 
 theta_2, Prob_post = MCMC(time, step_size, age_data, mean_age, std_age, prior, norm_2)
 
@@ -283,7 +283,12 @@ converge_time_l = np.int64(time - (3*time/4))
 
 theta_last = theta_2[converge_time_l:]   ##  taking the last n values of our MCMC sample
 
-P_D = MCMC_int(theta_last, age_data, mean_age, std_age, prior, h, norm, norm_2)
+MCMC_mean = np.mean(theta_last)
+MCMC_std = np.std(theta_last)
+
+h = np.array([MCMC_mean, MCMC_std])
+
+P_D = MCMC_int(theta_last, mean_age, std_age, prior, h, norm, norm_2)
 
 f, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
 ax1.hist(theta_2, bins=30)
@@ -291,8 +296,12 @@ ax1.set_xlabel('theta')
 ax2.hist(theta_last, bins=30)
 ax2.set_xlabel('theta')
 
-MCMC_mean = np.mean(theta_last)
-MCMC_std = np.std(theta_last)
+
+plt.figure()
+plt.plot(theta_2, Prob_post)
+plt.xlabel('theta')
+plt.ylabel(r'$P(\theta|\hat X)$')
+
 
 print "MCMC mean =", MCMC_mean
 print "MCMC std =", MCMC_std
