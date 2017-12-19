@@ -12,11 +12,27 @@ import scipy as sp
 import scipy.interpolate as spi
 import scipy.stats as sps
 import matplotlib.pyplot as plt
-from uncertainties import ufloat
+import uncertainties as u
 from uncertainties import unumpy
 
 
 plt.close('all')
+
+
+@u.wrap
+def roots(n=0, *P):
+
+    """ Adapted the numpy.roots function to take into account the uncertainties in the Coefficients """
+
+    p = np.array(P)
+    N = len(p)
+
+    M = np.diag(np.ones((N - 2,), p.dtype), -1)
+    M[0, :] = -p[1:] / p[0]
+
+    r = np.linalg.eigvals(M)
+
+    return r[n]
 
 
 def cubic_spline(x, x_data, y_data, s_data, t_data, per_data):
@@ -82,31 +98,59 @@ def f_Mx_func(P, K):
     return (P_d*(K*1e3)**3)/(2*np.pi*G)
 
 
-def Mx_func(Mc, i, f_Mx, N):
+def Mx_func(Mc, i, f_Mx, Decision=0):
 
-    M_sun = 1.989e30
+    f_Mx_val = unumpy.nominal_values(f_Mx)
 
-    Mx = np.linspace(0.5, 10, N)*M_sun
+    c1 = (np.sin(i))**3
 
-    Mx_actual = 0
+    c2 = -f_Mx_val
 
-    for j in xrange(len(Mx)):
+    c3 = -2*f_Mx_val
 
-        q = Mc/Mx[j]
+    c4 = -Mc**2*f_Mx_val
 
-        result = (Mx[j]*(np.sin(i))**3)/(1 + q)**2
+    Coeff_real = [c1, c2, c3, c4]
 
-        if result >= f_Mx:
+    Root = np.roots(Coeff_real)
 
-            Mx_actual = Mx[j]
+    Root_very_real = Root[Root.imag == 0].real
 
-            break
 
-        else:
+    if Decision == 0:
 
-            continue
+        Result = Root_very_real
 
-    return Mx_actual
+    else:
+
+        f_Mx_std = unumpy.std_devs(f_Mx)
+
+        sc1 = 0
+        sc2 = f_Mx_std
+        sc3 = 2*f_Mx_std
+        sc4 = f_Mx_std
+
+        C1 = u.ufloat(c1, sc1)
+        C2 = u.ufloat(c2, sc2)
+        C3 = u.ufloat(c3, sc3)
+        C4 = u.ufloat(c4, sc4)
+
+        Coeff = [C1, C2, C3, C4]
+
+
+        for m in xrange(len(Coeff) - 1):
+
+            Root = roots(m, *Coeff)
+
+            if Root.nominal_value == Root_very_real:
+
+                Result = Root
+
+            else:
+
+                continue
+
+    return Result
 
 
 # template_list = ['g5', 'g9', 'k0', 'k1', 'k2', 'k4', 'k5', 'k7', 'k8', 'm0']
@@ -261,9 +305,9 @@ for k in range(len(template_list)):
 
                 index = np.argmin(Chi_squared)
 
-                A = unumpy.uarray([A_parameter[index]], [np.abs(sigma_A[index])])
+                A = u.ufloat(A_parameter[index], np.abs(sigma_A[index]))
 
-                print A
+                print 'A parameter : {:.2u}'.format(A)
 
 
                 fig2, ax2 = plt.subplots()
@@ -488,17 +532,87 @@ for k in range(len(template_list)):
 
     Mc = 0.7*M_sun
 
-    N = 1e6
+    Mx_i = Mx_func(Mc, incline, f_Mx, 1)
 
-    Mx = Mx_func(Mc, incline, f_Mx, N)
-
-
-    print K
-
-    print f_Mx/M_sun
-
-    print Mx/M_sun
+    Mx_i_sol_unit = Mx_i/M_sun
 
 
+    # print K
+    #
+    # print f_Mx/M_sun
+
+    print 'Mx : {:.3u}'.format(Mx_i_sol_unit)
+
+
+    Ntrial = 1e5
+
+    # Creating standard deviations for each parameter
+
+    standard_Mc = 0.3*M_sun
+    standard_K = unumpy.std_devs(K)
+    standard_P = 0.5*P
+
+    angle = np.linspace(np.deg2rad(50), np.deg2rad(90), 1e6)
+
+    # Creating arrays for paramaters and Mx
+
+    incline_trial = np.zeros(np.int(Ntrial))
+    Mc_trial = np.zeros(np.int(Ntrial))
+    K_trial = np.zeros(np.int(Ntrial))
+    P_trial = np.zeros(np.int(Ntrial))
+
+    f_Mx_trial = np.zeros(np.int(Ntrial))
+    Mx_trial = np.zeros(np.int(Ntrial))
+
+    inc = np.deg2rad(80)
+
+    for l in xrange(np.int(Ntrial)):
+
+
+        incline_trial[l] = np.random.choice(angle)
+
+        Mc_trial[l] = np.random.normal(Mc, standard_Mc)
+
+        K_trial[l] = np.random.normal(unumpy.nominal_values(K), standard_K)
+
+        P_trial[l] = np.random.normal(P, standard_P)
+
+        f_Mx_trial[l] = f_Mx_func(P_trial[l], K_trial[l])
+
+        Mx_trial[l] = Mx_func(Mc_trial[l], incline_trial[l], f_Mx_trial[l], 0)
+
+
+    Mx_sol_unit = Mx_trial / M_sun
+
+    Mx_mean = np.mean(Mx_sol_unit)
+
+    Mx_std = np.std(Mx_sol_unit)
+
+    Mx = u.ufloat(Mx_mean, Mx_std)
+
+
+    print 'Mx : {:.3u}'.format(Mx)
+
+
+    plt.figure()
+
+    plt.hist(Mx_sol_unit, normed=True, bins=30)
+
+
+    hist = np.histogram(Mx_sol_unit, bins=30)
+    hist_dist = sps.rv_histogram(hist)
+
+    X = np.linspace(0.0, 20.0, 500)
+
+    plt.figure()
+
+    plt.plot(X, hist_dist.pdf(X), label='PDF')
+    plt.plot(X, hist_dist.cdf(X), label='CDF')
+
+    plt.legend(loc='best')
+
+    print len(Mx_sol_unit[Mx_sol_unit > 3])/Ntrial
+
+    print 1 - hist_dist.cdf(3)
 
 plt.show()

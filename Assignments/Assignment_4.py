@@ -105,8 +105,6 @@ for k in range(len(template_list)):
 
     W = str(template_list[k])
 
-    print W
-
     lambda_temp_orig, flux_temp_orig, err_temp_orig = np.loadtxt(
         '/home/gerwyn/Documents/Physics/Computing Year 4/Data-Analysis/Assignments/Assignment 4/MiniProjectAllData/KeckTemplates/keck_' + W + '.txt',
         unpack=True)
