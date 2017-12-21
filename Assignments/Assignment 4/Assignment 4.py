@@ -75,9 +75,9 @@ def smooth(y_data, window_width):
 
 def doppler_shift(lambda_original, velocity):
 
-    c = 3e8
+    """ Velocity in terms of ms-1 """
 
-    """ Velocity in terms of c """
+    c = 3e8
 
     lambda_new = lambda_original*(1 + velocity/c)
 
@@ -152,6 +152,8 @@ def Mx_func(Mc, i, f_Mx, Decision=0):
 
     return Result
 
+# setting up the template star
+
 template_list = ['k5']
 
 gs200_id = np.arange(1, 14)
@@ -159,9 +161,13 @@ gs200_id = np.arange(1, 14)
 gs200_size = gs200_id.size
 
 
+# Creating possible trial velocities
+
 v = 1e6
 
 Vel = np.linspace(-v, v, 201)
+
+# Creating arrays for the radial velocities and their errors
 
 radial_vel = np.zeros(gs200_size)
 
@@ -169,9 +175,11 @@ error_rad_vel_less = np.zeros(gs200_size)
 
 error_rad_vel_more = np.zeros(gs200_size)
 
+# Creating an array for the companion star phase
 
 phase = np.array([-0.1405, -0.0583, 0.0325, 0.0998, 0.1740, 0.2310, 0.3079, 0.3699, 0.4388, 0.5008, 0.5698, 0.6371, 0.7276])
 
+# Choosing cut-off wavelengths
 
 Wavelength_min = 5700
 
@@ -180,6 +188,7 @@ Wavelength_max = 6200
 
 linestyle = ['solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'dashdot', 'dashdot', 'dashdot']
 
+# Reading template file
 
 W = str(template_list[0])
 
@@ -188,7 +197,7 @@ lambda_temp_orig, flux_temp_orig, err_temp_orig = np.loadtxt(
     unpack=True)
 
 # Define h:
-window_width = 2
+window_width = 0    # 0 = Not Smoothed
 
 # Create an array of smoothed data:
 flux_temp_smooth = smooth(flux_temp_orig, window_width)
@@ -206,6 +215,8 @@ spl_temp = cubic_spline(lambda_temp_orig, lambda_temp_orig, flux_temp_smooth, s_
 # Continuum subtracted template:
 continuum_subtracted_temp = spl_temp - flux_temp_smooth
 
+
+# Plotting spectra
 
 plt.figure()
 
@@ -225,13 +236,13 @@ plt.xlabel(r"$Wavelength \/ (\AA)$")
 
 fig1, ax1 = plt.subplots()
 
-# ax1.set_title("Template = %s" % W)
-
 for j in range(gs200_size):
 
     id = gs200_id[j]
 
     if id < 10:
+
+        # Reading GS2000 files
 
         Q = str(id)
 
@@ -239,6 +250,7 @@ for j in range(gs200_size):
             '/home/gerwyn/Documents/Physics/Computing Year 4/Data-Analysis/Assignments/Assignment 4/MiniProjectAllData//GS2000/keck_gs2000_0' + Q + '.txt',
             unpack=True)
 
+        # Create an array of smoothed data:
         flux_keck_gs2000_smooth = smooth(flux_keck_gs2000_orig, window_width)
 
         # Create the array of knots:
@@ -253,6 +265,7 @@ for j in range(gs200_size):
         # Continuum subtracted gs200:
         continuum_subtracted_keck = spl_keck - flux_keck_gs2000_smooth
 
+        # Creating arrays for the parameters and their errors
         A_parameter = np.zeros(len(Vel))
         sigma_A = np.zeros(len(Vel))
         Chi_squared = np.zeros(len(Vel))
@@ -306,6 +319,7 @@ for j in range(gs200_size):
 
             print 'A parameter : {:.2u}'.format(A)
 
+            # Plotting spectra
 
             fig2, ax2 = plt.subplots()
 
@@ -325,8 +339,9 @@ for j in range(gs200_size):
 
             Carry_on = 0
 
+        # Plotting chi-squared
 
-        ax1.plot(Vel/(1e3), Chi_squared, label=id, linestyle=linestyle[j])
+        ax1.plot(Vel/(1e3), Chi_squared, label=phase[j], linestyle=linestyle[j])
 
         ax1.set_xlabel(r"$Velocity \/ shift \/ (Km/s)$")
         ax1.set_ylabel(r"$\chi^2$")
@@ -419,8 +434,9 @@ for j in range(gs200_size):
             Chi_squared[i] = np.sum((reduced_continuum_keck - reduced_continuum_temp_shifted * A_parameter[i]) ** 2 /
                                     reduced_err_keck_gs2000 ** 2)
 
+        # Plotting chi-squared
 
-        ax1.plot(Vel/(1e3), Chi_squared, label=id, linestyle=linestyle[j])
+        ax1.plot(Vel/(1e3), Chi_squared, label=phase[j], linestyle=linestyle[j])
 
         ax1.set_xlabel(r"$Velocity \/ shift \/ (Km/s)$")
         ax1.set_ylabel(r"$\chi^2$")
@@ -455,8 +471,9 @@ ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 Average_sig = (error_rad_vel_more + error_rad_vel_less) / 2
 
+# Creating our Hessian Matrix and solving to find our best fit parameters
 
-w = 1 / Average_sig ** 2
+w = 1 / Average_sig ** 2   # weight
 
 W = np.sum(w)
 
@@ -488,11 +505,22 @@ Inverse_Hessian = np.linalg.inv(Hessian_Matrix)
 Dot_Product = np.dot(Inverse_Hessian, Vel_Matrix)
 
 
+# Determining our curve fit parameters
+
 gamma = Dot_Product[0] / (1e3)
 
 Kx = Dot_Product[1] / (1e3)
 
 Ky = Dot_Product[2] / (1e3)
+
+print "gamma : ", gamma
+
+print "Kx : ", Kx
+
+print "Ky : ", Ky
+
+
+# Plotting radial velocity and phase
 
 phase_trial = np.linspace(np.min(phase), np.max(phase), 100)
 
@@ -521,13 +549,19 @@ K = (Kx ** 2 + Ky ** 2) ** (1 / 2)
 
 K_vector = u.ufloat(unumpy.nominal_values(K), unumpy.std_devs(K))
 
-P = 0.3440915  # days
+# Defining our parameters
+
+P = 0.3440915  # units of days
 
 M_sun = 1.989e30
 
 
+# Mass function
+
 f_Mx = f_Mx_func(P, K)
 
+
+# Finding minimum mass using i = 90 degrees and Mc = 0.7
 
 incline = np.deg2rad(90)
 
@@ -538,26 +572,30 @@ Mx_i = Mx_func(Mc, incline, f_Mx, 1)
 Mx_i_sol_unit = Mx_i/M_sun
 
 
-print 'K : {:.3f}'.format(K_vector)
+print 'K : {:.2f}'.format(K_vector)
 
 f_Mx_sol_unit = f_Mx/M_sun
 
 f_Mx_sol_unit_vector = u.ufloat(unumpy.nominal_values(f_Mx_sol_unit), unumpy.std_devs(f_Mx_sol_unit))
 
-print 'f(Mx) : {:.3u}'.format(f_Mx_sol_unit_vector)
+print 'f(Mx) : {:.2f}'.format(f_Mx_sol_unit_vector)
 
-print 'Mx : {:.3u}'.format(Mx_i_sol_unit)
+print 'Mx : {:.2f}'.format(Mx_i_sol_unit)
 
 
-Ntrial = 2e5
+""" Monte-carlo eror propagation """
+
+# Number of monte carlo trials
+
+Ntrial = 1e5
 
 # Creating standard deviations for each parameter
 
-standard_Mc = 0.5*Mc
-standard_K = 2*unumpy.std_devs(K)
-standard_P = 0.3*P
+standard_Mc = 0.4*Mc
+standard_K = 0.1*K_vector.nominal_value
+standard_P = 0.1*P
 
-angle = np.linspace(np.deg2rad(60), np.deg2rad(90), 1e6)
+angle = np.linspace(np.deg2rad(70), np.deg2rad(90), 1e4)
 
 # Creating arrays for paramaters and Mx
 
@@ -595,21 +633,15 @@ Mx_std = np.std(Mx_sol_unit)
 Mx = u.ufloat(Mx_mean, Mx_std)
 
 
-print 'Mx : {:.3u}'.format(Mx)
+print 'Monte-Carlo Mx : {:.2f}'.format(Mx)
 
 
-plt.figure()
-
-plt.hist(Mx_sol_unit, normed=True, bins=30)
-
-plt.xlabel(r"$Mass \/ of \/ compact \/ object \/ (M_\bigodot)$")
-plt.ylabel(r"$Probability$")
-
+# Plotting probabilities
 
 hist = np.histogram(Mx_sol_unit, bins=30)
 hist_dist = sps.rv_histogram(hist)
 
-X = np.linspace(0.0, np.max(Mx_sol_unit), 500)
+X = np.linspace(0.0, 15, 500)
 
 plt.figure()
 
@@ -636,16 +668,17 @@ for xc in xcoords:
 
 plt.axvspan((Mx.nominal_value - Mx.std_dev), (Mx.nominal_value + Mx.std_dev), facecolor='g', alpha=0.5)
 
-plt.legend(loc='best')
-
-plt.xlabel(r"$Mass \/ of \/ compact \/ object \/ \/ ( \/ M_\bigodot \/ )$")
+plt.xlabel(r"$Mass \/ of \/ compact \/ object \/ \/ ( \/ M_\odot \/ )$")
 plt.ylabel(r"$Probability$")
 
-print "Probability > 3 Msol = ", 1 - hist_dist.cdf(3)
 
-print "Mean of Mx ", Mx_mean
+print "Probability > 3 Msol : ", 1 - hist_dist.cdf(3)
 
-print "Median of Mx", Mx_median
+print "Mean of Mx : ", Mx_mean
 
+print "Median of Mx : ", Mx_median
+
+
+print "1-sigma : ", (hist_dist.cdf((Mx.nominal_value + Mx.std_dev))) - (hist_dist.cdf((Mx.nominal_value - Mx.std_dev)))
 
 plt.show()
