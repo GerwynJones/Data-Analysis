@@ -27,11 +27,29 @@ def cubic_spline(x, x_data, y_data, s_data, t_data, per_data):
 
 
 def smooth(y_data, window_width):
-
     """ Smoothing data """
 
-    window = np.ones(window_width)/window_width
-    y_smooth = np.convolve(y_data, window, mode='same')
+    y_smooth = np.zeros(len(y_data))
+
+    for i in range(len(y_data)):
+
+        if i > len(y_data) - window_width / 2:
+
+            S = y_data[i - int(window_width / 2):]
+
+            y_smooth[i] = np.sum(S)/len(S)
+
+        elif i < window_width / 2:
+
+            S = y_data[: i + int(window_width / 2) + 1]
+
+            y_smooth[i] = np.sum(S)/len(S)
+
+        else:
+
+            S = y_data[i - int(window_width / 2): i + int(window_width / 2) + 1]
+
+            y_smooth[i] = np.sum(S)/len(S)
 
     return y_smooth
 
@@ -70,7 +88,7 @@ lambda_temp_orig, flux_temp_orig, err_temp_orig = np.loadtxt(
     unpack=True)
 
 # Define h:
-window_width_temp = 10
+window_width_temp = 1
 
 # Create an array of smoothed data:
 flux_temp_smooth = smooth(flux_temp_orig, window_width_temp)
@@ -108,7 +126,7 @@ lambda_keck_gs2000_orig, flux_keck_gs2000_orig, err_keck_gs2000_orig = np.loadtx
     unpack=True)
 
 # Define h:
-window_width_keck = 20
+window_width_keck = 1
 
 flux_keck_gs2000_smooth = smooth(flux_keck_gs2000_orig, window_width_keck)
 
@@ -157,9 +175,9 @@ for i in xrange(len(Vel)):
 
     # Keck arrays
 
-    Wavelength_min = 5800
+    Wavelength_min = 5700
 
-    Wavelength_max = 6200
+    Wavelength_max = 6400
 
     reduced_lambda_keck = lambda_keck_gs2000_orig[(lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
@@ -189,18 +207,18 @@ plt.figure()
 plt.plot(Vel, Chi_squared)
 
 
-plt.figure()
-
-plt.plot(reduced_lambda_keck, reduced_continuum_keck, label='GS2000')
-
-plt.legend(loc='best')
-
-
-plt.figure()
-
-plt.plot(reduced_lambda_keck, reduced_continuum_temp_shifted, label='Template')
-
-plt.legend(loc='best')
+# plt.figure()
+#
+# plt.plot(reduced_lambda_keck, reduced_continuum_keck, label='GS2000')
+#
+# plt.legend(loc='best')
+#
+#
+# plt.figure()
+#
+# plt.plot(reduced_lambda_keck, reduced_continuum_temp_shifted, label='Template')
+#
+# plt.legend(loc='best')
 
 
 Chi_min = np.min(Chi_squared)
@@ -273,40 +291,6 @@ i = 5
 
 h = 4
 
-error = np.linspace(0.5, 0.3, 10)
-
-
-def smooth_A(y_data, err, window_width):
-    """ Smoothing data """
-
-    weight = 1 / err ** 2
-
-    y_smooth = np.zeros(len(y_data))
-
-    j = 0
-
-    N = len(y_data) - window_width / 2
-
-    for i in range(len(y_data)):
-
-        if i > len(y_data) - window_width / 2:
-
-            y_smooth[i] = np.average(y_data[i - int(window_width / 2):],
-                                     weights=weight[i - int(window_width / 2):])
-
-        elif i < window_width / 2:
-
-            y_smooth[i] = np.average(y_data[: i + int(window_width / 2) + 1],
-                                     weights=weight[: i + int(window_width / 2) + 1])
-
-        else:
-
-            y_smooth[i] = np.average(y_data[i - int(window_width / 2): i + int(window_width / 2) + 1],
-                                     weights=weight[i - int(window_width / 2): i + int(window_width / 2) + 1])
-
-    return y_smooth
-
-
 def smooth_S(y_data, window_width):
     """ Smoothing data """
 
@@ -338,8 +322,6 @@ def smooth_S(y_data, window_width):
 
     return y_smooth
 
-
-A = smooth_A(X, error, h)
 
 S = smooth_S(X, h)
 

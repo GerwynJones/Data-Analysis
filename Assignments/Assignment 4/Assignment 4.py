@@ -152,9 +152,6 @@ def Mx_func(Mc, i, f_Mx, Decision=0):
 
     return Result
 
-
-# template_list = ['g5', 'g9', 'k0', 'k1', 'k2', 'k4', 'k5', 'k7', 'k8', 'm0']
-
 template_list = ['k5']
 
 gs200_id = np.arange(1, 14)
@@ -166,11 +163,11 @@ v = 1e6
 
 Vel = np.linspace(-v, v, 201)
 
-radial_vel = np.zeros((len(template_list), gs200_size))
+radial_vel = np.zeros(gs200_size)
 
-error_rad_vel_less = np.zeros((len(template_list), gs200_size))
+error_rad_vel_less = np.zeros(gs200_size)
 
-error_rad_vel_more = np.zeros((len(template_list), gs200_size))
+error_rad_vel_more = np.zeros(gs200_size)
 
 
 phase = np.array([-0.1405, -0.0583, 0.0325, 0.0998, 0.1740, 0.2310, 0.3079, 0.3699, 0.4388, 0.5008, 0.5698, 0.6371, 0.7276])
@@ -178,441 +175,477 @@ phase = np.array([-0.1405, -0.0583, 0.0325, 0.0998, 0.1740, 0.2310, 0.3079, 0.36
 
 Wavelength_min = 5700
 
-Wavelength_max = 6300
+Wavelength_max = 6200
 
 
-# fig, ax = plt.subplots()
+linestyle = ['solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'solid', 'dashdot', 'dashdot', 'dashdot']
 
-for k in range(len(template_list)):
 
-    W = str(template_list[k])
+W = str(template_list[0])
 
-    lambda_temp_orig, flux_temp_orig, err_temp_orig = np.loadtxt(
-        '/home/gerwyn/Documents/Physics/Computing Year 4/Data-Analysis/Assignments/Assignment 4/MiniProjectAllData/KeckTemplates/keck_' + W + '.txt',
-        unpack=True)
+lambda_temp_orig, flux_temp_orig, err_temp_orig = np.loadtxt(
+    '/home/gerwyn/Documents/Physics/Computing Year 4/Data-Analysis/Assignments/Assignment 4/MiniProjectAllData/KeckTemplates/keck_' + W + '.txt',
+    unpack=True)
 
-    # Define h:
-    window_width = 5
+# Define h:
+window_width = 2
 
-    # Create an array of smoothed data:
-    flux_temp_smooth = smooth(flux_temp_orig, window_width)
+# Create an array of smoothed data:
+flux_temp_smooth = smooth(flux_temp_orig, window_width)
 
-    # Define the number of knots:
-    nknots = 4
+# Define the number of knots:
+nknots = 4
 
-    # Create the array of knots:
-    knots = np.arange(lambda_temp_orig[1], lambda_temp_orig[-1],
-                      (lambda_temp_orig[-1] - lambda_temp_orig[1]) / np.double(nknots))
+# Create the array of knots:
+knots = np.arange(lambda_temp_orig[1], lambda_temp_orig[-1],
+                  (lambda_temp_orig[-1] - lambda_temp_orig[1]) / np.double(nknots))
 
-    # Use cubic spline:
-    spl_temp = cubic_spline(lambda_temp_orig, lambda_temp_orig, flux_temp_smooth, s_data=None, t_data=knots, per_data=0)
+# Use cubic spline:
+spl_temp = cubic_spline(lambda_temp_orig, lambda_temp_orig, flux_temp_smooth, s_data=None, t_data=knots, per_data=0)
 
-    # Continuum subtracted template:
-    continuum_subtracted_temp = spl_temp - flux_temp_smooth
+# Continuum subtracted template:
+continuum_subtracted_temp = spl_temp - flux_temp_smooth
 
 
-    plt.figure()
+plt.figure()
 
-    plt.plot(lambda_temp_orig, spl_temp, label='Overall continuum shape')
+plt.plot(lambda_temp_orig, spl_temp)
 
-    plt.plot(lambda_temp_orig, flux_temp_orig, label='keck_k5')
+plt.plot(lambda_temp_orig, flux_temp_orig)
 
-    plt.legend(loc='best')
 
-    plt.figure()
+plt.xlabel(r"$Wavelength \/ (\AA)$")
 
-    plt.plot(lambda_temp_orig, continuum_subtracted_temp, label='Template continuum subtracted')
+plt.figure()
 
-    plt.legend(loc='best')
+plt.plot(lambda_temp_orig, continuum_subtracted_temp)
 
+plt.xlabel(r"$Wavelength \/ (\AA)$")
 
-    fig1, ax1 = plt.subplots()
 
-    ax1.set_title("Template = %s" % W)
+fig1, ax1 = plt.subplots()
 
-    for j in range(gs200_size):
+# ax1.set_title("Template = %s" % W)
 
-        id = gs200_id[j]
+for j in range(gs200_size):
 
-        if id < 10:
+    id = gs200_id[j]
 
-            Q = str(id)
+    if id < 10:
 
-            lambda_keck_gs2000_orig, flux_keck_gs2000_orig, err_keck_gs2000_orig = np.loadtxt(
-                '/home/gerwyn/Documents/Physics/Computing Year 4/Data-Analysis/Assignments/Assignment 4/MiniProjectAllData//GS2000/keck_gs2000_0' + Q + '.txt',
-                unpack=True)
+        Q = str(id)
 
-            flux_keck_gs2000_smooth = smooth(flux_keck_gs2000_orig, window_width)
+        lambda_keck_gs2000_orig, flux_keck_gs2000_orig, err_keck_gs2000_orig = np.loadtxt(
+            '/home/gerwyn/Documents/Physics/Computing Year 4/Data-Analysis/Assignments/Assignment 4/MiniProjectAllData//GS2000/keck_gs2000_0' + Q + '.txt',
+            unpack=True)
 
-            # Create the array of knots:
-            knots = np.arange(lambda_keck_gs2000_orig[1], lambda_keck_gs2000_orig[-1],
-                              (lambda_keck_gs2000_orig[-1] - lambda_keck_gs2000_orig[1]) / np.double(nknots))
+        flux_keck_gs2000_smooth = smooth(flux_keck_gs2000_orig, window_width)
 
-            # Use cubic spline:
-            spl_keck = cubic_spline(lambda_keck_gs2000_orig, lambda_keck_gs2000_orig, flux_keck_gs2000_smooth, s_data=None,
-                         t_data=knots,
-                         per_data=0)
+        # Create the array of knots:
+        knots = np.arange(lambda_keck_gs2000_orig[1], lambda_keck_gs2000_orig[-1],
+                          (lambda_keck_gs2000_orig[-1] - lambda_keck_gs2000_orig[1]) / np.double(nknots))
 
-            # Continuum subtracted gs200:
-            continuum_subtracted_keck = spl_keck - flux_keck_gs2000_smooth
+        # Use cubic spline:
+        spl_keck = cubic_spline(lambda_keck_gs2000_orig, lambda_keck_gs2000_orig, flux_keck_gs2000_smooth, s_data=None,
+                     t_data=knots,
+                     per_data=0)
 
-            A_parameter = np.zeros(len(Vel))
-            sigma_A = np.zeros(len(Vel))
-            Chi_squared = np.zeros(len(Vel))
+        # Continuum subtracted gs200:
+        continuum_subtracted_keck = spl_keck - flux_keck_gs2000_smooth
 
-            for i in xrange(len(Vel)):
+        A_parameter = np.zeros(len(Vel))
+        sigma_A = np.zeros(len(Vel))
+        Chi_squared = np.zeros(len(Vel))
 
-                # Doppler shift
+        for i in xrange(len(Vel)):
 
-                doppler_lambda_temp = doppler_shift(lambda_temp_orig, Vel[i])
+            # Doppler shift
 
-                # Interpolating template using cubic spline
+            doppler_lambda_temp = doppler_shift(lambda_temp_orig, Vel[i])
 
-                continuum_temp_shifted = cubic_spline(lambda_keck_gs2000_orig, doppler_lambda_temp, continuum_subtracted_temp, s_data=None, t_data=None, per_data=0)
+            # Interpolating template using cubic spline
 
-                # Reducing the arrays so the may be interpolated correctly through cubic splines and exclude difference in patterns above 6400
+            continuum_temp_shifted = cubic_spline(lambda_keck_gs2000_orig, doppler_lambda_temp, continuum_subtracted_temp, s_data=None, t_data=None, per_data=0)
 
-                # Keck arrays
+            # Reducing the arrays so the may be interpolated correctly through cubic splines and exclude difference in patterns above 6400
 
-                reduced_lambda_keck = lambda_keck_gs2000_orig[
-                    (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
+            # Keck arrays
 
-                reduced_continuum_keck = continuum_subtracted_keck[
-                    (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
+            reduced_lambda_keck = lambda_keck_gs2000_orig[
+                (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
-                reduced_err_keck_gs2000 = err_keck_gs2000_orig[
-                    (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
+            reduced_continuum_keck = continuum_subtracted_keck[
+                (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
-                # Template arrays
+            reduced_err_keck_gs2000 = err_keck_gs2000_orig[
+                (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
-                reduced_continuum_temp_shifted = continuum_temp_shifted[
-                    (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
+            # Template arrays
 
-                # Scaling parameter
+            reduced_continuum_temp_shifted = continuum_temp_shifted[
+                (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
-                A_parameter[i] = np.sum((reduced_continuum_keck * reduced_continuum_temp_shifted) / (
-                        reduced_err_keck_gs2000 ** 2)) / np.sum(
-                        (reduced_continuum_temp_shifted ** 2) / (reduced_err_keck_gs2000 ** 2))
+            # Scaling parameter
 
-                sigma_A[i] = 1 / np.sum((reduced_continuum_temp_shifted ** 2) / (reduced_err_keck_gs2000 ** 2))
+            A_parameter[i] = np.sum((reduced_continuum_keck * reduced_continuum_temp_shifted) / (
+                    reduced_err_keck_gs2000 ** 2)) / np.sum(
+                    (reduced_continuum_temp_shifted ** 2) / (reduced_err_keck_gs2000 ** 2))
 
-                # Chi Squared
+            sigma_A[i] = 1 / np.sum((reduced_continuum_temp_shifted ** 2) / (reduced_err_keck_gs2000 ** 2))
 
-                Chi_squared[i] = np.sum((reduced_continuum_keck - reduced_continuum_temp_shifted * A_parameter[i]) ** 2 /
-                                        reduced_err_keck_gs2000 ** 2)
+            # Chi Squared
 
-            if id == 1:
+            Chi_squared[i] = np.sum((reduced_continuum_keck - reduced_continuum_temp_shifted * A_parameter[i]) ** 2 /
+                                    reduced_err_keck_gs2000 ** 2)
 
-                index = np.argmin(Chi_squared)
-
-                A = u.ufloat(A_parameter[index], np.abs(sigma_A[index]))
-
-                print 'A parameter : {:.2u}'.format(A)
-
-
-                fig2, ax2 = plt.subplots()
-
-                ax2.plot(lambda_keck_gs2000_orig, spl_keck, label='Overall continuum shape')
-
-                ax2.plot(lambda_keck_gs2000_orig, flux_keck_gs2000_smooth, label='keck_gs2000_01')
-
-                ax2.legend(loc='best')
-
-                fig4, ax4 = plt.subplots()
-
-                ax4.plot(lambda_keck_gs2000_orig, continuum_subtracted_keck, label='GS2000 continuum subtracted')
-
-                ax4.legend(loc='best')
-
-            else:
-
-                Carry_on = 0
-
-
-            ax1.plot(Vel/(1e3), Chi_squared, label=id)
-
-            ax1.legend(loc='best')
-
-            ax1.set_xlabel(r"$Velocity \/ shift \/ (Km/s)$")
-            ax1.set_ylabel(r"$\chi^2$")
+        if id == 1:
 
             index = np.argmin(Chi_squared)
 
-            Chi_min = Chi_squared[index]
+            A = u.ufloat(A_parameter[index], np.abs(sigma_A[index]))
 
-            radial_vel[k, j] = Vel[Chi_squared == Chi_min]
+            print 'A parameter : {:.2u}'.format(A)
 
-            Chi_plus_one = Chi_min + 1
 
-            less_than_chi = Chi_squared[Vel < radial_vel[k, j]]
+            fig2, ax2 = plt.subplots()
 
-            more_than_chi = Chi_squared[Vel > radial_vel[k, j]]
+            ax2.plot(lambda_keck_gs2000_orig, spl_keck)
 
-            less_than_vel = Vel[Vel < radial_vel[k, j]]
+            ax2.plot(lambda_keck_gs2000_orig, flux_keck_gs2000_smooth)
 
-            more_than_vel = Vel[Vel > radial_vel[k, j]]
+            ax2.set_xlabel(r"$Wavelength \/ (\AA)$")
 
-            error_rad_vel_less[k, j] = np.max(less_than_vel[less_than_chi > Chi_plus_one]) - radial_vel[k, j]
+            fig4, ax4 = plt.subplots()
 
-            error_rad_vel_more[k, j] = radial_vel[k, j] - np.min(more_than_vel[more_than_chi > Chi_plus_one])
+            ax4.plot(lambda_keck_gs2000_orig, continuum_subtracted_keck)
 
+            ax4.set_xlabel(r"$Wavelength \/ (\AA)$")
 
-        elif id >= 10:
+        else:
 
-            Q = str(id)
+            Carry_on = 0
 
-            lambda_keck_gs2000_orig, flux_keck_gs2000_orig, err_keck_gs2000_orig = np.loadtxt(
-                '/home/gerwyn/Documents/Physics/Computing Year 4/Data-Analysis/Assignments/Assignment 4/MiniProjectAllData//GS2000/keck_gs2000_' + Q + '.txt',
-                unpack=True)
 
-            flux_keck_gs2000_smooth = smooth(flux_keck_gs2000_orig, window_width)
+        ax1.plot(Vel/(1e3), Chi_squared, label=id, linestyle=linestyle[j])
 
-            # Create the array of knots:
-            knots = np.arange(lambda_keck_gs2000_orig[1], lambda_keck_gs2000_orig[-1],
-                              (lambda_keck_gs2000_orig[-1] - lambda_keck_gs2000_orig[1]) / np.double(nknots))
+        ax1.set_xlabel(r"$Velocity \/ shift \/ (Km/s)$")
+        ax1.set_ylabel(r"$\chi^2$")
 
-            # Use cubic spline:
-            spl_keck = cubic_spline(lambda_keck_gs2000_orig, lambda_keck_gs2000_orig, flux_keck_gs2000_smooth, s_data=None,
-                         t_data=knots,
-                         per_data=0)
+        index = np.argmin(Chi_squared)
 
-            # Continuum subtracted gs200:
-            continuum_subtracted_keck = spl_keck - flux_keck_gs2000_smooth
+        Chi_min = Chi_squared[index]
 
-            A_parameter = np.zeros(len(Vel))
-            sigma_A = np.zeros(len(Vel))
-            Chi_squared = np.zeros(len(Vel))
+        radial_vel[j] = Vel[Chi_squared == Chi_min]
 
-            for i in xrange(len(Vel)):
+        Chi_plus_one = Chi_min + 1
 
-                # Doppler shift
+        less_than_chi = Chi_squared[Vel < radial_vel[j]]
 
-                doppler_lambda_temp = doppler_shift(lambda_temp_orig, Vel[i])
+        more_than_chi = Chi_squared[Vel > radial_vel[j]]
 
-                # Interpolating template using cubic spline
+        less_than_vel = Vel[Vel < radial_vel[j]]
 
-                continuum_temp_shifted = cubic_spline(lambda_keck_gs2000_orig, doppler_lambda_temp, continuum_subtracted_temp, s_data=None, t_data=None, per_data=0)
+        more_than_vel = Vel[Vel > radial_vel[j]]
 
-                # Reducing the arrays so the may be interpolated correctly through cubic splines and exclude difference in patterns above 6400
+        error_rad_vel_less[j] = np.max(less_than_vel[less_than_chi > Chi_plus_one]) - radial_vel[j]
 
-                # Keck arrays
+        error_rad_vel_more[j] = radial_vel[j] - np.min(more_than_vel[more_than_chi > Chi_plus_one])
 
-                reduced_lambda_keck = lambda_keck_gs2000_orig[
-                    (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
-                reduced_continuum_keck = continuum_subtracted_keck[
-                    (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
+    elif id >= 10:
 
-                reduced_err_keck_gs2000 = err_keck_gs2000_orig[
-                    (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
+        Q = str(id)
 
-                # Template arrays
+        lambda_keck_gs2000_orig, flux_keck_gs2000_orig, err_keck_gs2000_orig = np.loadtxt(
+            '/home/gerwyn/Documents/Physics/Computing Year 4/Data-Analysis/Assignments/Assignment 4/MiniProjectAllData//GS2000/keck_gs2000_' + Q + '.txt',
+            unpack=True)
 
-                reduced_continuum_temp_shifted = continuum_temp_shifted[
-                    (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
+        flux_keck_gs2000_smooth = smooth(flux_keck_gs2000_orig, window_width)
 
-                # Scaling parameter
+        # Create the array of knots:
+        knots = np.arange(lambda_keck_gs2000_orig[1], lambda_keck_gs2000_orig[-1],
+                          (lambda_keck_gs2000_orig[-1] - lambda_keck_gs2000_orig[1]) / np.double(nknots))
 
-                A_parameter[i] = np.sum((reduced_continuum_keck * reduced_continuum_temp_shifted) / (
-                        reduced_err_keck_gs2000 ** 2)) / np.sum(
-                        (reduced_continuum_temp_shifted ** 2) / (reduced_err_keck_gs2000 ** 2))
+        # Use cubic spline:
+        spl_keck = cubic_spline(lambda_keck_gs2000_orig, lambda_keck_gs2000_orig, flux_keck_gs2000_smooth, s_data=None,
+                     t_data=knots,
+                     per_data=0)
 
-                sigma_A[i] = 1 / np.sum((reduced_continuum_temp_shifted ** 2) / (reduced_err_keck_gs2000 ** 2))
+        # Continuum subtracted gs200:
+        continuum_subtracted_keck = spl_keck - flux_keck_gs2000_smooth
 
-                # Chi Squared
+        A_parameter = np.zeros(len(Vel))
+        sigma_A = np.zeros(len(Vel))
+        Chi_squared = np.zeros(len(Vel))
 
-                Chi_squared[i] = np.sum((reduced_continuum_keck - reduced_continuum_temp_shifted * A_parameter[i]) ** 2 /
-                                        reduced_err_keck_gs2000 ** 2)
+        for i in xrange(len(Vel)):
 
+            # Doppler shift
 
-            ax1.plot(Vel/(1e3), Chi_squared, label=id)
+            doppler_lambda_temp = doppler_shift(lambda_temp_orig, Vel[i])
 
-            ax1.legend(loc='best')
+            # Interpolating template using cubic spline
 
-            ax1.set_xlabel(r"$Velocity \/ shift \/ (Km/s)$")
-            ax1.set_ylabel(r"$\chi^2$")
+            continuum_temp_shifted = cubic_spline(lambda_keck_gs2000_orig, doppler_lambda_temp, continuum_subtracted_temp, s_data=None, t_data=None, per_data=0)
 
+            # Reducing the arrays so the may be interpolated correctly through cubic splines and exclude difference in patterns above 6400
 
-            index = np.argmin(Chi_squared)
+            # Keck arrays
 
-            Chi_min = Chi_squared[index]
+            reduced_lambda_keck = lambda_keck_gs2000_orig[
+                (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
-            radial_vel[k, j] = Vel[Chi_squared == Chi_min]
+            reduced_continuum_keck = continuum_subtracted_keck[
+                (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
-            Chi_plus_one = Chi_min + 1
+            reduced_err_keck_gs2000 = err_keck_gs2000_orig[
+                (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
-            less_than_chi = Chi_squared[Vel < radial_vel[k, j]]
+            # Template arrays
 
-            more_than_chi = Chi_squared[Vel > radial_vel[k, j]]
+            reduced_continuum_temp_shifted = continuum_temp_shifted[
+                (lambda_keck_gs2000_orig >= Wavelength_min) & (lambda_keck_gs2000_orig <= Wavelength_max)]
 
-            less_than_vel = Vel[Vel < radial_vel[k, j]]
+            # Scaling parameter
 
-            more_than_vel = Vel[Vel > radial_vel[k, j]]
+            A_parameter[i] = np.sum((reduced_continuum_keck * reduced_continuum_temp_shifted) / (
+                    reduced_err_keck_gs2000 ** 2)) / np.sum(
+                    (reduced_continuum_temp_shifted ** 2) / (reduced_err_keck_gs2000 ** 2))
 
-            error_rad_vel_less[k, j] = np.max(less_than_vel[less_than_chi > Chi_plus_one]) - radial_vel[k, j]
+            sigma_A[i] = 1 / np.sum((reduced_continuum_temp_shifted ** 2) / (reduced_err_keck_gs2000 ** 2))
 
-            error_rad_vel_more[k, j] = radial_vel[k, j] - np.min(more_than_vel[more_than_chi > Chi_plus_one])
+            # Chi Squared
 
+            Chi_squared[i] = np.sum((reduced_continuum_keck - reduced_continuum_temp_shifted * A_parameter[i]) ** 2 /
+                                    reduced_err_keck_gs2000 ** 2)
 
-    Average_sig = (error_rad_vel_more + error_rad_vel_less) / 2
 
+        ax1.plot(Vel/(1e3), Chi_squared, label=id, linestyle=linestyle[j])
 
-    w = 1 / Average_sig ** 2
+        ax1.set_xlabel(r"$Velocity \/ shift \/ (Km/s)$")
+        ax1.set_ylabel(r"$\chi^2$")
 
-    W = np.sum(w)
 
-    Wsin = np.sum(w * np.sin(2 * np.pi * phase))
+        index = np.argmin(Chi_squared)
 
-    Wcos = np.sum(w * np.cos(2 * np.pi * phase))
+        Chi_min = Chi_squared[index]
 
-    Wsin2 = np.sum(w * (np.sin(2 * np.pi * phase)) ** 2)
+        radial_vel[j] = Vel[Chi_squared == Chi_min]
 
-    Wcos2 = np.sum(w * (np.cos(2 * np.pi * phase)) ** 2)
+        Chi_plus_one = Chi_min + 1
 
-    Wcossin = np.sum(w * np.cos(2 * np.pi * phase) * np.sin(2 * np.pi * phase))
+        less_than_chi = Chi_squared[Vel < radial_vel[j]]
 
+        more_than_chi = Chi_squared[Vel > radial_vel[j]]
 
-    Hessian_Matrix = np.array([W, Wsin, Wcos, Wsin, Wsin2, Wcossin, Wcos, Wcossin, Wcos2]).reshape(3, 3)
+        less_than_vel = Vel[Vel < radial_vel[j]]
 
-    vel = unumpy.uarray(radial_vel[0, :], np.abs(Average_sig))
+        more_than_vel = Vel[Vel > radial_vel[j]]
 
-    Wv = np.sum(w * vel)
+        error_rad_vel_less[j] = np.max(less_than_vel[less_than_chi > Chi_plus_one]) - radial_vel[j]
 
-    Wvsin = np.sum(w * np.sin(2 * np.pi * phase) * vel)
+        error_rad_vel_more[j] = radial_vel[j] - np.min(more_than_vel[more_than_chi > Chi_plus_one])
 
-    Wvcos = np.sum(w * np.cos(2 * np.pi * phase) * vel)
+# Shrink current axis by 20%
+box = ax1.get_position()
+ax1.set_position([box.x0, box.y0, box.width * 0.8, box.height])
 
-    Vel_Matrix = np.array([Wv, Wvsin, Wvcos]).reshape(3, 1)
+# Put a legend to the right of the current axis
+ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
-    Inverse_Hessian = np.linalg.inv(Hessian_Matrix)
+Average_sig = (error_rad_vel_more + error_rad_vel_less) / 2
 
-    Dot_Product = np.dot(Inverse_Hessian, Vel_Matrix)
 
+w = 1 / Average_sig ** 2
 
-    gamma = Dot_Product[0] / (1e3)
+W = np.sum(w)
 
-    Kx = Dot_Product[1] / (1e3)
+Wsin = np.sum(w * np.sin(2 * np.pi * phase))
 
-    Ky = Dot_Product[2] / (1e3)
+Wcos = np.sum(w * np.cos(2 * np.pi * phase))
 
-    phase_trial = np.linspace(np.min(phase), np.max(phase), 100)
+Wsin2 = np.sum(w * (np.sin(2 * np.pi * phase)) ** 2)
 
-    sinusoidal_vel = sinusoidal_curve(gamma, Kx, Ky, phase_trial)
+Wcos2 = np.sum(w * (np.cos(2 * np.pi * phase)) ** 2)
 
-    K = (Kx ** 2 + Ky ** 2) ** (1 / 2)
+Wcossin = np.sum(w * np.cos(2 * np.pi * phase) * np.sin(2 * np.pi * phase))
 
-    ls = 'None'
 
-    fig, ax = plt.subplots()
+Hessian_Matrix = np.array([W, Wsin, Wcos, Wsin, Wsin2, Wcossin, Wcos, Wcossin, Wcos2]).reshape(3, 3)
 
-    # standard error bars
-    ax.errorbar(phase, radial_vel[0, :] / (1e3),
-                yerr=[error_rad_vel_less[0, :] / (1e3), error_rad_vel_more[0, :] / (1e3)],
-                marker=".", linestyle=ls, capsize=2)
+vel = unumpy.uarray(radial_vel[:], np.abs(Average_sig))
 
-    ax.set_ylabel(r"$Velocity \/ (Km/s)$")
-    ax.set_xlabel(r"$binary \/ phase$")
+Wv = np.sum(w * vel)
 
-    Curve_val = unumpy.nominal_values(sinusoidal_vel)
+Wvsin = np.sum(w * np.sin(2 * np.pi * phase) * vel)
 
-    ax.plot(phase_trial, Curve_val)
+Wvcos = np.sum(w * np.cos(2 * np.pi * phase) * vel)
 
+Vel_Matrix = np.array([Wv, Wvsin, Wvcos]).reshape(3, 1)
 
-    K = (Kx ** 2 + Ky ** 2) ** (1 / 2)
+Inverse_Hessian = np.linalg.inv(Hessian_Matrix)
 
-    P = 0.3440915  # days
+Dot_Product = np.dot(Inverse_Hessian, Vel_Matrix)
 
-    M_sun = 1.989e30
 
+gamma = Dot_Product[0] / (1e3)
 
-    f_Mx = f_Mx_func(P, K)
+Kx = Dot_Product[1] / (1e3)
 
+Ky = Dot_Product[2] / (1e3)
 
-    incline = np.deg2rad(90)
+phase_trial = np.linspace(np.min(phase), np.max(phase), 100)
 
-    Mc = 0.7*M_sun
+sinusoidal_vel = sinusoidal_curve(gamma, Kx, Ky, phase_trial)
 
-    Mx_i = Mx_func(Mc, incline, f_Mx, 1)
+K = (Kx ** 2 + Ky ** 2) ** (1 / 2)
 
-    Mx_i_sol_unit = Mx_i/M_sun
+ls = 'None'
 
+fig, ax = plt.subplots()
 
-    # print K
-    #
-    # print f_Mx/M_sun
+# standard error bars
+ax.errorbar(phase, radial_vel[:] / (1e3),
+            yerr=[error_rad_vel_less[:] / (1e3), error_rad_vel_more[:] / (1e3)],
+            marker=".", linestyle=ls, capsize=2)
 
-    print 'Mx : {:.3u}'.format(Mx_i_sol_unit)
+ax.set_ylabel(r"$Velocity \/ (Km/s)$")
+ax.set_xlabel(r"$binary \/ phase$")
 
+Curve_val = unumpy.nominal_values(sinusoidal_vel)
 
-    Ntrial = 1e5
+ax.plot(phase_trial, Curve_val)
 
-    # Creating standard deviations for each parameter
 
-    standard_Mc = 0.3*M_sun
-    standard_K = unumpy.std_devs(K)
-    standard_P = 0.5*P
+K = (Kx ** 2 + Ky ** 2) ** (1 / 2)
 
-    angle = np.linspace(np.deg2rad(50), np.deg2rad(90), 1e6)
+K_vector = u.ufloat(unumpy.nominal_values(K), unumpy.std_devs(K))
 
-    # Creating arrays for paramaters and Mx
+P = 0.3440915  # days
 
-    incline_trial = np.zeros(np.int(Ntrial))
-    Mc_trial = np.zeros(np.int(Ntrial))
-    K_trial = np.zeros(np.int(Ntrial))
-    P_trial = np.zeros(np.int(Ntrial))
+M_sun = 1.989e30
 
-    f_Mx_trial = np.zeros(np.int(Ntrial))
-    Mx_trial = np.zeros(np.int(Ntrial))
 
-    inc = np.deg2rad(80)
+f_Mx = f_Mx_func(P, K)
 
-    for l in xrange(np.int(Ntrial)):
 
+incline = np.deg2rad(90)
 
-        incline_trial[l] = np.random.choice(angle)
+Mc = 0.7*M_sun
 
-        Mc_trial[l] = np.random.normal(Mc, standard_Mc)
+Mx_i = Mx_func(Mc, incline, f_Mx, 1)
 
-        K_trial[l] = np.random.normal(unumpy.nominal_values(K), standard_K)
+Mx_i_sol_unit = Mx_i/M_sun
 
-        P_trial[l] = np.random.normal(P, standard_P)
 
-        f_Mx_trial[l] = f_Mx_func(P_trial[l], K_trial[l])
+print 'K : {:.3f}'.format(K_vector)
 
-        Mx_trial[l] = Mx_func(Mc_trial[l], incline_trial[l], f_Mx_trial[l], 0)
+f_Mx_sol_unit = f_Mx/M_sun
 
+f_Mx_sol_unit_vector = u.ufloat(unumpy.nominal_values(f_Mx_sol_unit), unumpy.std_devs(f_Mx_sol_unit))
 
-    Mx_sol_unit = Mx_trial / M_sun
+print 'f(Mx) : {:.3u}'.format(f_Mx_sol_unit_vector)
 
-    Mx_mean = np.mean(Mx_sol_unit)
+print 'Mx : {:.3u}'.format(Mx_i_sol_unit)
 
-    Mx_std = np.std(Mx_sol_unit)
 
-    Mx = u.ufloat(Mx_mean, Mx_std)
+Ntrial = 2e5
 
+# Creating standard deviations for each parameter
 
-    print 'Mx : {:.3u}'.format(Mx)
+standard_Mc = 0.5*Mc
+standard_K = 2*unumpy.std_devs(K)
+standard_P = 0.3*P
 
+angle = np.linspace(np.deg2rad(60), np.deg2rad(90), 1e6)
 
-    plt.figure()
+# Creating arrays for paramaters and Mx
 
-    plt.hist(Mx_sol_unit, normed=True, bins=30)
+incline_trial = np.zeros(np.int(Ntrial))
+Mc_trial = np.zeros(np.int(Ntrial))
+K_trial = np.zeros(np.int(Ntrial))
+P_trial = np.zeros(np.int(Ntrial))
 
+f_Mx_trial = np.zeros(np.int(Ntrial))
+Mx_trial = np.zeros(np.int(Ntrial))
 
-    hist = np.histogram(Mx_sol_unit, bins=30)
-    hist_dist = sps.rv_histogram(hist)
+for l in xrange(np.int(Ntrial)):
 
-    X = np.linspace(0.0, 20.0, 500)
+    incline_trial[l] = np.random.choice(angle)
 
-    plt.figure()
+    Mc_trial[l] = np.random.normal(Mc, standard_Mc)
 
-    plt.plot(X, hist_dist.pdf(X), label='PDF')
-    plt.plot(X, hist_dist.cdf(X), label='CDF')
+    K_trial[l] = np.random.normal(unumpy.nominal_values(K), standard_K)
 
-    plt.legend(loc='best')
+    P_trial[l] = np.random.normal(P, standard_P)
 
-    print len(Mx_sol_unit[Mx_sol_unit > 3])/Ntrial
+    f_Mx_trial[l] = f_Mx_func(P_trial[l], K_trial[l])
 
-    print 1 - hist_dist.cdf(3)
+    Mx_trial[l] = Mx_func(Mc_trial[l], incline_trial[l], f_Mx_trial[l], 0)
+
+
+Mx_sol_unit = Mx_trial / M_sun
+
+Mx_mean = np.mean(Mx_sol_unit)
+
+Mx_median = np.median(Mx_sol_unit)
+
+Mx_std = np.std(Mx_sol_unit)
+
+Mx = u.ufloat(Mx_mean, Mx_std)
+
+
+print 'Mx : {:.3u}'.format(Mx)
+
+
+plt.figure()
+
+plt.hist(Mx_sol_unit, normed=True, bins=30)
+
+plt.xlabel(r"$Mass \/ of \/ compact \/ object \/ (M_\bigodot)$")
+plt.ylabel(r"$Probability$")
+
+
+hist = np.histogram(Mx_sol_unit, bins=30)
+hist_dist = sps.rv_histogram(hist)
+
+X = np.linspace(0.0, np.max(Mx_sol_unit), 500)
+
+plt.figure()
+
+plt.plot(X, hist_dist.pdf(X), label='PDF')
+plt.plot(X, hist_dist.cdf(X), label='CDF')
+
+xcoords = [Mx_mean, Mx_median]
+
+text_coords = [Mx_mean + 0.1, Mx_median - 0.7]
+
+plot_text = ['mean', 'median']
+
+colour = ['red', 'red']
+
+plot_index = 0
+
+for xc in xcoords:
+
+    plt.axvline(x=xc, color=colour[plot_index], linestyle='--')
+
+    plt.text(text_coords[plot_index], 1, plot_text[plot_index], rotation=90)
+
+    plot_index += 1
+
+plt.axvspan((Mx.nominal_value - Mx.std_dev), (Mx.nominal_value + Mx.std_dev), facecolor='g', alpha=0.5)
+
+plt.legend(loc='best')
+
+plt.xlabel(r"$Mass \/ of \/ compact \/ object \/ \/ ( \/ M_\bigodot \/ )$")
+plt.ylabel(r"$Probability$")
+
+print "Probability > 3 Msol = ", 1 - hist_dist.cdf(3)
+
+print "Mean of Mx ", Mx_mean
+
+print "Median of Mx", Mx_median
+
 
 plt.show()
